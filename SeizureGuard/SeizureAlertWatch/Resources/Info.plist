@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Bundle Configuration -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>SeizureGuard</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundlePackageType</key>
+	<string>$(PRODUCT_BUNDLE_PACKAGE_TYPE)</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.0</string>
+	<key>CFBundleVersion</key>
+	<string>1</string>
+	<key>WKApplication</key>
+	<true/>
+
+	<!-- Location Permissions -->
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>SeizureGuard needs your location to share it with your emergency contact during an alert.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>SeizureGuard needs background location access to share your location during a seizure alert even when the app is not in the foreground.</string>
+
+	<!-- Motion Permission -->
+	<key>NSMotionUsageDescription</key>
+	<string>SeizureGuard monitors motion data to detect seizure-like movements and alert your emergency contact.</string>
+
+	<!-- Background Modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>workout-processing</string>
+		<string>fetch</string>
+	</array>
+
+	<!-- Companion iPhone app -->
+	<key>WKCompanionAppBundleIdentifier</key>
+	<string>com.seizureguard.app</string>
+</dict>
+</plist>
