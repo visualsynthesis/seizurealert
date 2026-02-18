@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeizureGuard — Apple Watch Seizure Detection</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #050507;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* ======= NAV ======= */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(5,5,7,.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px;
+  }
+  .nav-brand { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+  .nav-brand span { color: #30d158; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: #8e8e93; font-size: 13px; text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: #fff; }
+
+  /* ======= HERO ======= */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 100px 24px 60px;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(48,209,88,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-block;
+    padding: 5px 14px;
+    background: rgba(48,209,88,.1);
+    border: 1px solid rgba(48,209,88,.2);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600; color: #30d158;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.08;
+    margin-bottom: 16px;
+    max-width: 700px;
+  }
+  h1 .grad {
+    background: linear-gradient(135deg, #30d158, #0a84ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: 18px; color: #8e8e93;
+    max-width: 520px;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    background: #30d158;
+    border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 700; color: #000;
+    cursor: pointer; text-decoration: none;
+    transition: transform .15s, background .2s;
+  }
+  .hero-cta:hover { transform: scale(1.03); background: #34d95e; }
+
+  /* ======= SECTION COMMON ======= */
+  section { padding: 80px 24px; max-width: 1000px; margin: 0 auto; }
+  h2 {
+    font-size: 32px; font-weight: 800; letter-spacing: -.5px;
+    margin-bottom: 12px; text-align: center;
+  }
+  .section-sub {
+    font-size: 16px; color: #8e8e93; text-align: center;
+    max-width: 560px; margin: 0 auto 48px;
+  }
+
+  /* ======= HOW IT WORKS ======= */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+  }
+  .flow-card {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    background: rgba(48,209,88,.1);
+    border-radius: 10px;
+    font-size: 16px; font-weight: 800; color: #30d158;
+    margin-bottom: 14px;
+  }
+  .flow-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .flow-card p { font-size: 13px; color: #8e8e93; line-height: 1.5; }
+
+  /* ======= INTERACTIVE DEMO ======= */
+  #demo { text-align: center; }
+  .demo-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 20px;
+    margin-top: 16px;
+  }
+
+  /* ---- Watch ---- */
+  .watch {
+    width: 210px; height: 290px;
+    background: #1c1c1e;
+    border-radius: 50px;
+    border: 3px solid #3a3a3c;
+    position: relative;
+    box-shadow: 0 8px 60px rgba(0,0,0,.8), 0 0 80px rgba(48,209,88,.04);
+  }
+  .watch::after {
+    content: '';
+    position: absolute; right: -12px; top: 72px;
+    width: 8px; height: 36px;
+    background: #3a3a3c;
+    border-radius: 0 3px 3px 0;
+  }
+  .watch.shaking { animation: shake .07s infinite alternate; }
+  .display {
+    position: absolute; inset: 14px;
+    background: #000; border-radius: 38px;
+    overflow: hidden;
+  }
+
+  .scr {
+    display: none; flex-direction: column;
+    align-items: center;
+    width: 100%; height: 100%;
+    padding: 10px 12px 8px;
+  }
+  .scr.show { display: flex; }
+
+  /* S1: Idle */
+  .s1-title { font-size: 13px; font-weight: 700; margin-top: 2px; }
+  .s1-status { font-size: 9px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+  .s1-status.on { color: #30d158; }
+  .s1-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #48484a;
+    display: flex; align-items: center; justify-content: center;
+    margin: 14px 0 0; position: relative; transition: background .4s;
+  }
+  .s1-circle.on { background: #30d158; }
+  .s1-circle .heart { font-size: 22px; }
+  .s1-circle .ring {
+    display: none; position: absolute; inset: -8px;
+    border: 2px solid rgba(48,209,88,.35);
+    border-radius: 50%;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .s1-circle.on .ring { display: block; }
+  .s1-btn {
+    margin-top: 12px; width: 100%; padding: 10px;
+    border: none; border-radius: 10px;
+    font-size: 12px; font-weight: 700; color: #fff; cursor: pointer;
+  }
+  .s1-btn.start { background: #30d158; }
+  .s1-btn.stop  { background: #ff453a; }
+  .s1-readout {
+    margin-top: 8px; width: 100%;
+    display: flex; justify-content: space-between;
+    padding: 5px 8px; background: rgba(255,255,255,.05); border-radius: 6px;
+  }
+  .s1-readout .lbl { font-size: 8px; color: #636366; font-weight: 600; }
+  .s1-readout .val { font-size: 10px; font-family: monospace; color: #30d158; }
+  .s1-readout .val.off { color: #ff9f0a; }
+
+  /* S2: Detecting */
+  .s2-title { font-size: 12px; font-weight: 700; margin-top: 4px; }
+  .s2-warn { font-size: 11px; font-weight: 700; color: #ff9f0a; margin-top: 4px; animation: blink .55s infinite; }
+  .s2-wave {
+    width: 100%; height: 56px; margin-top: 10px;
+    background: rgba(255,255,255,.03); border-radius: 6px;
+    overflow: hidden; position: relative;
+  }
+  .s2-wave .bar {
+    position: absolute; bottom: 0; width: 3px;
+    background: #ff453a; border-radius: 2px 2px 0 0;
+    animation: waveBar .3s ease-in-out infinite alternate;
+  }
+  .s2-bar-wrap {
+    width: 100%; height: 6px;
+    background: rgba(255,255,255,.08); border-radius: 3px;
+    margin-top: 8px; overflow: hidden;
+  }
+  .s2-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #ff9f0a, #ff453a);
+    border-radius: 3px; transition: width .25s linear;
+  }
+  .s2-label { font-size: 9px; color: #8e8e93; margin-top: 4px; }
+
+  /* S3: Countdown */
+  .s3-header { font-size: 12px; font-weight: 800; color: #ff453a; margin-top: 2px; }
+  .s3-sub { font-size: 8px; color: #ff9f0a; margin-top: 1px; }
+  .s3-ring { width: 90px; height: 90px; margin: 8px 0 6px; position: relative; }
+  .s3-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .s3-ring .bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 5; }
+  .s3-ring .fg {
+    fill: none; stroke: #ff453a; stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 251; stroke-dashoffset: 0;
+    transition: stroke-dashoffset .15s linear;
+  }
+  .s3-num {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-58%);
+    font-size: 28px; font-weight: 800; font-family: monospace; color: #fff;
+  }
+  .s3-sec {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,55%);
+    font-size: 8px; color: #636366;
+  }
+  .s3-badge {
+    padding: 3px 10px;
+    background: rgba(255,255,255,.05); border-radius: 6px;
+    font-size: 9px; color: #aeaeb2;
+  }
+  .s3-badge b { color: #fff; font-weight: 600; }
+  .s3-ok {
+    margin-top: auto; width: 100%; padding: 11px;
+    border: none; border-radius: 10px; background: #30d158;
+    font-size: 14px; font-weight: 800; color: #fff;
+    letter-spacing: 1px; cursor: pointer;
+  }
+  .s3-ok:active { transform: scale(.96); }
+
+  /* S4: Sent */
+  .s4 { justify-content: center; gap: 6px; }
+  .s4-check {
+    width: 54px; height: 54px; border-radius: 50%; background: #30d158;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; animation: pop .35s ease;
+  }
+  .s4-title { font-size: 15px; font-weight: 700; }
+  .s4-detail { font-size: 9px; color: #8e8e93; text-align: center; }
+  .s4-sms {
+    width: 100%; padding: 7px 8px;
+    background: rgba(48,209,88,.08);
+    border: 1px solid rgba(48,209,88,.18); border-radius: 8px;
+  }
+  .s4-sms div { font-size: 8px; color: #aeaeb2; line-height: 1.6; }
+  .s4-sms .hi { color: #fff; font-weight: 600; font-size: 9px; }
+  .s4-sms .link { color: #0a84ff; }
+
+  /* S5: Cancelled */
+  .s5 { justify-content: center; gap: 8px; }
+  .s5-icon {
+    width: 54px; height: 54px; border-radius: 50%; background: #0a84ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; animation: pop .35s ease;
+  }
+  .s5-title { font-size: 15px; font-weight: 700; }
+  .s5-detail { font-size: 10px; color: #8e8e93; text-align: center; line-height: 1.5; }
+
+  /* ---- Demo Controls ---- */
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .ctrl {
+    padding: 10px 20px;
+    border: 1px solid #3a3a3c; background: transparent;
+    color: #aeaeb2; border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .ctrl:hover { background: rgba(255,255,255,.06); color: #fff; border-color: #636366; }
+  .dots { display: flex; gap: 7px; margin-top: 16px; justify-content: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3a3c; transition: background .3s; }
+  .dot.on { background: #0a84ff; }
+  .caption {
+    font-size: 18px; color: #f5f5f7; min-height: 52px; margin-top: 16px;
+    font-weight: 500; letter-spacing: 0.01em; line-height: 1.5;
+    transition: all .4s ease; max-width: 420px; margin-left: auto; margin-right: auto;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px; padding: 14px 20px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  .caption .cap-label {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 6px;
+    margin-right: 8px; vertical-align: middle; position: relative; top: -1px;
+  }
+  .cap-sense { background: rgba(10,132,255,.25); color: #0a84ff; border: 1px solid rgba(10,132,255,.3); }
+  .cap-detect { background: rgba(255,69,58,.25); color: #ff453a; border: 1px solid rgba(255,69,58,.3); }
+  .cap-count { background: rgba(255,159,10,.25); color: #ff9f0a; border: 1px solid rgba(255,159,10,.3); }
+  .cap-alert { background: rgba(48,209,88,.25); color: #30d158; border: 1px solid rgba(48,209,88,.3); }
+  .cap-info { background: rgba(174,174,178,.2); color: #aeaeb2; border: 1px solid rgba(174,174,178,.2); }
+
+  /* ======= FEATURES ======= */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .feat {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .feat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 14px;
+  }
+  .feat h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .feat p { font-size: 13px; color: #8e8e93; line-height: 1.5; }
+
+  /* ======= TECH STACK ======= */
+  .tech-row {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center;
+  }
+  .tech-pill {
+    padding: 8px 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: #aeaeb2;
+  }
+
+  /* ======= FOOTER ======= */
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-size: 13px; color: #636366;
+  }
+
+  /* ======= KEYFRAMES ======= */
+  @keyframes shake { from { transform: translate(-2px,1px) rotate(-.4deg); } to { transform: translate(2px,-1px) rotate(.4deg); } }
+  @keyframes pulse { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.35); opacity: 0; } }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes waveBar { to { height: var(--h); } }
+
+  @media (max-width: 600px) {
+    nav { padding: 10px 16px; }
+    .nav-links { display: none; }
+    section { padding: 60px 16px; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand"><span>Seizure</span>Guard</div>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#demo">Live Demo</a>
+    <a href="#features">Features</a>
+    <a href="#tech">Tech Stack</a>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">watchOS + iOS App</div>
+  <h1>Seizure detection,<br><span class="grad">right on your wrist.</span></h1>
+  <p class="hero-sub">SeizureGuard monitors motion data on Apple Watch to detect seizure-like movements and automatically alert your emergency contact with a live GPS location.</p>
+  <a href="#demo" class="hero-cta">See it in action</a>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how">
+  <h2>How It Works</h2>
+  <p class="section-sub">From detection to alert in under 15 seconds. The wearer can always cancel with a single tap.</p>
+  <div class="flow">
+    <div class="flow-card">
+      <div class="flow-num">1</div>
+      <h3>Monitor</h3>
+      <p>Accelerometer reads motion at 50 Hz on a background thread. Zero battery drain from the UI.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">2</div>
+      <h3>Detect</h3>
+      <p>Sustained high-magnitude movement for 5+ seconds triggers a seizure-like motion pattern match.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">3</div>
+      <h3>Countdown</h3>
+      <p>10-second countdown with haptics every second. The wearer can tap "I'M OK" to cancel instantly.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">4</div>
+      <h3>Alert</h3>
+      <p>Critical notification fires immediately. SMS opens pre-filled with GPS location and Google Maps link.</p>
+    </div>
+  </div>
+</section>
+
+<!-- INTERACTIVE DEMO -->
+<section id="demo">
+  <h2>Interactive Demo</h2>
+  <p class="section-sub">Click through the full alert flow or see what happens when the user cancels.</p>
+  <div class="demo-wrap">
+    <div class="watch" id="watch">
+      <div class="display">
+        <!-- S1: Idle -->
+        <div class="scr show" id="s1">
+          <div class="s1-title">SeizureGuard</div>
+          <div class="s1-status" id="s1Status">Inactive</div>
+          <div class="s1-circle" id="s1Circle"><div class="ring"></div><span class="heart">&#x2665;</span></div>
+          <button class="s1-btn start" id="s1Btn" onclick="toggleMonitor()">Start Monitoring</button>
+          <div class="s1-readout">
+            <div><div class="lbl">ACCEL</div><div class="val" id="s1Accel">0.00 g</div></div>
+            <div style="text-align:right"><div class="lbl">STATUS</div><div class="val off" id="s1Stat">Idle</div></div>
+          </div>
+        </div>
+        <!-- S2: Detecting -->
+        <div class="scr" id="s2">
+          <div class="s2-title">SeizureGuard</div>
+          <div class="s2-warn">MOTION DETECTED</div>
+          <div class="s2-wave" id="s2Wave"></div>
+          <div class="s2-bar-wrap"><div class="s2-fill" id="s2Fill"></div></div>
+          <div class="s2-label" id="s2Label">Analyzing pattern...</div>
+        </div>
+        <!-- S3: Countdown -->
+        <div class="scr" id="s3">
+          <div class="s3-header">SEIZURE DETECTED</div>
+          <div class="s3-sub">Emergency alert sending</div>
+          <div class="s3-ring">
+            <svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="40"/><circle class="fg" id="s3Arc" cx="50" cy="50" r="40"/></svg>
+            <div class="s3-num" id="s3Num">10.0</div>
+            <div class="s3-sec">seconds</div>
+          </div>
+          <div class="s3-badge">Notifying <b>Mom</b></div>
+          <button class="s3-ok" id="s3Ok" onclick="cancelCountdown()">I'M OK</button>
+        </div>
+        <!-- S4: Sent -->
+        <div class="scr s4" id="s4">
+          <div class="s4-check">&#x2713;</div>
+          <div class="s4-title">Alert Sent</div>
+          <div class="s4-detail">Notification + SMS sent<br>with your live location</div>
+          <div class="s4-sms">
+            <div class="hi">SEIZURE ALERT</div>
+            <div>Time: 2/15/2026, 3:42 PM</div>
+            <div>Location: 37.7749, -122.4194</div>
+            <div class="link">maps.google.com/?q=37.77...</div>
+            <div>Please check on them.</div>
+          </div>
+        </div>
+        <!-- S5: Cancelled -->
+        <div class="scr s5" id="s5">
+          <div class="s5-icon">&#x1F44D;</div>
+          <div class="s5-title">Alert Cancelled</div>
+          <div class="s5-detail">Glad you're okay!<br>Monitoring will resume.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="controls">
+      <button class="ctrl" onclick="playFull()">&#x25B6; Play Full Demo</button>
+      <button class="ctrl" onclick="playCancel()">Cancel Path</button>
+      <button class="ctrl" onclick="reset()">&#x21BA; Reset</button>
+    </div>
+    <div class="dots"><div class="dot on" id="d0"></div><div class="dot" id="d1"></div><div class="dot" id="d2"></div><div class="dot" id="d3"></div></div>
+    <div class="caption" id="cap"><span class="cap-label cap-info">READY</span> Tap "Play Full Demo" to watch SeizureGuard in action</div>
+  </div>
+</section>
+
+<!-- FEATURES -->
+<section id="features">
+  <h2>Key Features</h2>
+  <p class="section-sub">Built for reliability when it matters most.</p>
+  <div class="features-grid">
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(48,209,88,.1);">&#x1F4A8;</div>
+      <h3>50 Hz Motion Analysis</h3>
+      <p>Accelerometer data processed on a dedicated background queue. No UI lag, no missed samples.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(255,69,58,.1);">&#x1F6A8;</div>
+      <h3>Critical Notifications</h3>
+      <p>Fires a critical-priority local notification immediately with no user interaction required.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(10,132,255,.1);">&#x1F4CD;</div>
+      <h3>Live GPS Location</h3>
+      <p>Captures real-time coordinates and includes a Google Maps link in every alert.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(255,159,10,.1);">&#x1F504;</div>
+      <h3>Auto-Restart</h3>
+      <p>Monitoring automatically resumes after an alert or cancellation. No manual restart needed.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(175,130,255,.1);">&#x267F;</div>
+      <h3>Full Accessibility</h3>
+      <p>VoiceOver labels and hints on every interactive element. Tested for screen reader compatibility.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(48,209,88,.1);">&#x1F512;</div>
+      <h3>Privacy First</h3>
+      <p>All data stays on-device. No cloud, no accounts. Includes Apple's required privacy manifest.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <h2>Tech Stack</h2>
+  <p class="section-sub">Native Apple frameworks for maximum reliability.</p>
+  <div class="tech-row">
+    <div class="tech-pill">SwiftUI</div>
+    <div class="tech-pill">CoreMotion</div>
+    <div class="tech-pill">CoreLocation</div>
+    <div class="tech-pill">WatchConnectivity</div>
+    <div class="tech-pill">UserNotifications</div>
+    <div class="tech-pill">MessageUI</div>
+    <div class="tech-pill">os.Logger</div>
+  </div>
+</section>
+
+<footer>
+  SeizureGuard &mdash; Built with care for people who need it most.
+</footer>
+
+<script>
+/* === Timer Management === */
+var timers = [];
+var accelTimer = null;
+var cdTimer = null;
+var fillTimer = null;
+var monitoring = false;
+var cdVal = 10;
+var cdCallback = null;
+var demoRunning = false;
+
+function later(fn, ms) {
+  var t = setTimeout(fn, ms);
+  timers.push(t);
+  return t;
+}
+
+function killAllTimers() {
+  for (var i = 0; i < timers.length; i++) {
+    clearTimeout(timers[i]);
+    clearInterval(timers[i]);
+  }
+  timers = [];
+  if (accelTimer) { clearInterval(accelTimer); accelTimer = null; }
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+  if (fillTimer) { clearInterval(fillTimer); fillTimer = null; }
+}
+
+/* === Screen Management === */
+function show(id) {
+  var screens = document.querySelectorAll('.scr');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('show');
+  }
+  var target = document.getElementById(id);
+  if (target) target.classList.add('show');
+}
+
+function step(n, txt) {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('d' + i);
+    if (dot) dot.className = (i <= n) ? 'dot on' : 'dot';
+  }
+  var cap = document.getElementById('cap');
+  if (cap) cap.innerHTML = txt;
+}
+
+/* === Wave Bars (visual only) === */
+(function() {
+  var w = document.getElementById('s2Wave');
+  if (!w) return;
+  for (var i = 0; i < 30; i++) {
+    var bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.left = (i * 6) + 'px';
+    bar.style.height = '4px';
+    bar.style.setProperty('--h', (8 + Math.random() * 44) + 'px');
+    bar.style.animationDelay = (Math.random() * 0.3) + 's';
+    bar.style.animationDuration = (0.15 + Math.random() * 0.25) + 's';
+    w.appendChild(bar);
+  }
+})();
+
+/* === Monitoring Toggle === */
+function toggleMonitor() {
+  monitoring = !monitoring;
+  var btn = document.getElementById('s1Btn');
+  var circle = document.getElementById('s1Circle');
+  var st = document.getElementById('s1Status');
+  var sv = document.getElementById('s1Stat');
+  var accel = document.getElementById('s1Accel');
+
+  if (monitoring) {
+    if (btn) { btn.textContent = 'Stop Monitoring'; btn.className = 's1-btn stop'; }
+    if (circle) circle.classList.add('on');
+    if (st) { st.textContent = 'Active'; st.className = 's1-status on'; }
+    if (sv) { sv.textContent = 'Running'; sv.className = 'val'; }
+    accelTimer = setInterval(function() {
+      if (accel) accel.textContent = (Math.random() * 0.3 + 0.04).toFixed(2) + ' g';
+    }, 180);
+    timers.push(accelTimer);
+  } else {
+    if (btn) { btn.textContent = 'Start Monitoring'; btn.className = 's1-btn start'; }
+    if (circle) circle.classList.remove('on');
+    if (st) { st.textContent = 'Inactive'; st.className = 's1-status'; }
+    if (sv) { sv.textContent = 'Idle'; sv.className = 'val off'; }
+    if (accelTimer) { clearInterval(accelTimer); accelTimer = null; }
+    if (accel) accel.textContent = '0.00 g';
+  }
+}
+
+/* === Countdown === */
+function startCountdown(onDone) {
+  cdVal = 10;
+  cdCallback = onDone;
+  updateCountdownDisplay();
+  cdTimer = setInterval(function() {
+    cdVal -= 0.1;
+    if (cdVal <= 0.05) {
+      cdVal = 0;
+      clearInterval(cdTimer);
+      cdTimer = null;
+      updateCountdownDisplay();
+      if (cdCallback) cdCallback();
+      return;
+    }
+    updateCountdownDisplay();
+  }, 100);
+  timers.push(cdTimer);
+}
+
+function updateCountdownDisplay() {
+  var num = document.getElementById('s3Num');
+  var arc = document.getElementById('s3Arc');
+  if (num) num.textContent = cdVal.toFixed(1);
+  var pct = (10 - cdVal) / 10;
+  if (arc) arc.style.strokeDashoffset = (251 * (1 - pct)).toString();
+}
+
+function cancelCountdown() {
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+  var watch = document.getElementById('watch');
+  if (watch) watch.classList.remove('shaking');
+  show('s5');
+  step(3, '<span class="cap-label cap-alert">SAFE</span> User confirmed they\u2019re okay \u2014 emergency alert cancelled');
+  later(function() {
+    resetToIdle();
+    step(0, '<span class="cap-label cap-info">COMPLETE</span> Cancel flow finished \u2014 tap Play to run it again');
+  }, 3000);
+}
+
+/* === Reset === */
+function resetToIdle() {
+  monitoring = false;
+  demoRunning = false;
+  var btn = document.getElementById('s1Btn');
+  var circle = document.getElementById('s1Circle');
+  var st = document.getElementById('s1Status');
+  var sv = document.getElementById('s1Stat');
+  var accel = document.getElementById('s1Accel');
+  var watch = document.getElementById('watch');
+  var fill = document.getElementById('s2Fill');
+  var label = document.getElementById('s2Label');
+
+  if (btn) { btn.textContent = 'Start Monitoring'; btn.className = 's1-btn start'; }
+  if (circle) circle.classList.remove('on');
+  if (st) { st.textContent = 'Inactive'; st.className = 's1-status'; }
+  if (sv) { sv.textContent = 'Idle'; sv.className = 'val off'; }
+  if (accel) accel.textContent = '0.00 g';
+  if (watch) watch.classList.remove('shaking');
+  if (fill) fill.style.width = '0%';
+  if (label) label.textContent = 'Analyzing pattern...';
+  show('s1');
+}
+
+function reset() {
+  killAllTimers();
+  resetToIdle();
+  step(0, '<span class="cap-label cap-info">READY</span> Tap "Play Full Demo" to watch SeizureGuard in action');
+}
+
+/* === Demo Flows === */
+function playFull() {
+  reset();
+  demoRunning = true;
+  step(0, '<span class="cap-label cap-sense">SENSORS</span> Activating CoreMotion accelerometer at 50 Hz...');
+
+  later(function() {
+    if (!demoRunning) return;
+    toggleMonitor();
+    step(0, '<span class="cap-label cap-sense">MONITORING</span> Wrist motion streaming live \u2014 watching for seizure patterns');
+  }, 900);
+
+  later(function() {
+    if (!demoRunning) return;
+    step(1, '<span class="cap-label cap-detect">DETECTION</span> Abnormal motion spike detected \u2014 analyzing movement pattern...');
+    var watch = document.getElementById('watch');
+    if (watch) watch.classList.add('shaking');
+    show('s2');
+
+    var pct = 0;
+    fillTimer = setInterval(function() {
+      pct += 2;
+      var fill = document.getElementById('s2Fill');
+      var label = document.getElementById('s2Label');
+      if (fill) fill.style.width = pct + '%';
+      if (label) {
+        if (pct < 35) label.textContent = 'Analyzing pattern...';
+        else if (pct < 65) label.textContent = 'Sustained motion detected';
+        else label.textContent = 'Threshold exceeded \u2014 triggering alert';
+      }
+      if (pct >= 100) { clearInterval(fillTimer); fillTimer = null; }
+    }, 100);
+    timers.push(fillTimer);
+  }, 3500);
+
+  later(function() {
+    if (!demoRunning) return;
+    show('s3');
+    step(2, '<span class="cap-label cap-count">COUNTDOWN</span> Seizure confirmed \u2014 10 seconds to tap "I\u2019M OK" before alerting contacts');
+    startCountdown(function() {
+      var watch = document.getElementById('watch');
+      if (watch) watch.classList.remove('shaking');
+      show('s4');
+      step(3, '<span class="cap-label cap-alert">ALERT SENT</span> Emergency SMS + notification dispatched to your contacts');
+      if (accelTimer) { clearInterval(accelTimer); accelTimer = null; }
+      later(function() {
+        resetToIdle();
+        step(0, '<span class="cap-label cap-info">COMPLETE</span> Full alert flow finished \u2014 tap Play to run it again');
+      }, 5000);
+    });
+  }, 9000);
+}
+
+function playCancel() {
+  reset();
+  demoRunning = true;
+  step(0, '<span class="cap-label cap-sense">SENSORS</span> Activating CoreMotion accelerometer at 50 Hz...');
+
+  later(function() {
+    if (!demoRunning) return;
+    toggleMonitor();
+    step(0, '<span class="cap-label cap-sense">MONITORING</span> Wrist motion streaming live \u2014 watching for seizure patterns');
+  }, 900);
+
+  later(function() {
+    if (!demoRunning) return;
+    step(1, '<span class="cap-label cap-detect">DETECTION</span> Abnormal motion spike detected \u2014 analyzing...');
+    var watch = document.getElementById('watch');
+    if (watch) watch.classList.add('shaking');
+    show('s2');
+
+    var pct = 0;
+    fillTimer = setInterval(function() {
+      pct += 3;
+      var fill = document.getElementById('s2Fill');
+      if (fill) fill.style.width = Math.min(pct, 100) + '%';
+      if (pct >= 100) { clearInterval(fillTimer); fillTimer = null; }
+    }, 80);
+    timers.push(fillTimer);
+  }, 3200);
+
+  later(function() {
+    if (!demoRunning) return;
+    show('s3');
+    step(2, '<span class="cap-label cap-count">COUNTDOWN</span> Seizure confirmed \u2014 user will tap "I\u2019M OK" to cancel...');
+    startCountdown(function() {});
+  }, 7000);
+
+  later(function() {
+    if (!demoRunning) return;
+    cancelCountdown();
+  }, 11000);
+}
+</script>
+</body>
+</html>
