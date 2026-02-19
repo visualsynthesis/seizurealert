@@ -1,1372 +1,804 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GoWild Flight Finder</title>
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-FCGS7G438W"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
-        gtag('config', 'G-FCGS7G438W');
-        // Custom event helper
-        function trackEvent(name, params) { if (typeof gtag === 'function') gtag('event', name, params); }
-    </script>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='0.9em' font-size='99'>✈</text></svg>">
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        :root{
-            --green:#1a873a;--green-light:#e8f5e9;--green-mid:#a5d6a7;
-            --bg:#f8f9fa;--bg2:#ffffff;--card:#ffffff;
-            --text:#202124;--muted:#5f6368;--border:#dadce0;
-            --warn:#e37400;--warn-bg:#fef7e0;--warn-border:#fbbc04;
-            --danger:#d93025;--danger-bg:#fce8e6;--danger-light:#f8bdb8;
-            --indigo:#1a73e8;--indigo-bg:#e8f0fe;
-            --radius:8px;--shadow:0 1px 2px rgba(60,64,67,0.3),0 1px 3px 1px rgba(60,64,67,0.15);
-            --shadow-lg:0 1px 3px rgba(60,64,67,0.3),0 4px 8px 3px rgba(60,64,67,0.15);
-        }
-        body{font-family:'Google Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
-        a{color:inherit;text-decoration:none}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SeizureGuard — Apple Watch Seizure Detection</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: #050507;
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
 
-        /* ===== HEADER ===== */
-        .header{background:#fff;color:var(--text);padding:14px 36px;display:flex;align-items:center;gap:16px;justify-content:space-between;cursor:pointer;border-bottom:1px solid var(--border)}
-        .header h1{font-size:20px;font-weight:600;display:flex;align-items:center;gap:8px;color:var(--green)}
-        .header .sub{font-size:12px;opacity:0.8;font-weight:400}
-        .header .tips{font-size:11px;color:var(--muted);display:flex;gap:16px}
+  /* ======= NAV ======= */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    background: rgba(5,5,7,.85); backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255,255,255,.06);
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 40px;
+  }
+  .nav-brand { font-size: 15px; font-weight: 700; letter-spacing: -.3px; }
+  .nav-brand span { color: #30d158; }
+  .nav-links { display: flex; gap: 28px; }
+  .nav-links a { color: #8e8e93; font-size: 13px; text-decoration: none; transition: color .2s; }
+  .nav-links a:hover { color: #fff; }
 
-        /* ===== SEARCH BAR ===== */
-        .search-bar{background:var(--bg2);padding:16px 36px;border-bottom:1px solid var(--border);display:flex;gap:14px;flex-wrap:wrap;align-items:flex-end}
-        .fg{display:flex;flex-direction:column;gap:4px}
-        .fg label{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.6px;color:var(--muted)}
-        .fg input,.fg select{padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:#fff;color:var(--text);font-size:13px;outline:none;transition:all .15s}
-        .fg input:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(26,135,58,0.15)}
+  /* ======= HERO ======= */
+  .hero {
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center;
+    padding: 100px 24px 60px;
+    position: relative;
+  }
+  .hero::before {
+    content: '';
+    position: absolute; top: 0; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 800px;
+    background: radial-gradient(circle, rgba(48,209,88,.08) 0%, transparent 70%);
+    pointer-events: none;
+  }
+  .badge {
+    display: inline-block;
+    padding: 5px 14px;
+    background: rgba(48,209,88,.1);
+    border: 1px solid rgba(48,209,88,.2);
+    border-radius: 20px;
+    font-size: 12px; font-weight: 600; color: #30d158;
+    margin-bottom: 20px;
+  }
+  h1 {
+    font-size: clamp(36px, 6vw, 56px);
+    font-weight: 800;
+    letter-spacing: -1.5px;
+    line-height: 1.08;
+    margin-bottom: 16px;
+    max-width: 700px;
+  }
+  h1 .grad {
+    background: linear-gradient(135deg, #30d158, #0a84ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hero-sub {
+    font-size: 18px; color: #8e8e93;
+    max-width: 520px;
+    margin-bottom: 36px;
+    line-height: 1.6;
+  }
+  .hero-cta {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 14px 28px;
+    background: #30d158;
+    border: none; border-radius: 12px;
+    font-size: 15px; font-weight: 700; color: #000;
+    cursor: pointer; text-decoration: none;
+    transition: transform .15s, background .2s;
+  }
+  .hero-cta:hover { transform: scale(1.03); background: #34d95e; }
 
-        /* Airport dropdown */
-        .aw{position:relative}
-        .ai{width:260px}
-        .ad{position:absolute;top:calc(100% + 4px);left:0;right:0;background:#fff;border:1px solid var(--border);border-radius:var(--radius);max-height:320px;overflow-y:auto;z-index:999;display:none;box-shadow:var(--shadow-lg)}
-        .ad.show{display:block}
-        .ao{padding:9px 12px;cursor:pointer;font-size:13px;transition:background .1s;display:flex;justify-content:space-between;border-bottom:1px solid #f3f4f6}
-        .ao:last-child{border-bottom:none}
-        .ao:hover{background:var(--green-light)}
-        .ao .c{font-weight:700;color:var(--green)}
+  /* ======= SECTION COMMON ======= */
+  section { padding: 80px 24px; max-width: 1000px; margin: 0 auto; }
+  h2 {
+    font-size: 32px; font-weight: 800; letter-spacing: -.5px;
+    margin-bottom: 12px; text-align: center;
+  }
+  .section-sub {
+    font-size: 16px; color: #8e8e93; text-align: center;
+    max-width: 560px; margin: 0 auto 48px;
+  }
 
-        /* Buttons */
-        .btn{padding:8px 20px;border-radius:20px;border:none;font-size:13px;font-weight:500;cursor:pointer;transition:all .15s;letter-spacing:0.2px}
-        .btn-g{background:var(--green);color:#fff}
-        .btn-g:hover{background:#157a30;box-shadow:var(--shadow)}
+  /* ======= HOW IT WORKS ======= */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 24px;
+  }
+  .flow-card {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 28px 20px;
+    text-align: center;
+    position: relative;
+  }
+  .flow-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px;
+    background: rgba(48,209,88,.1);
+    border-radius: 10px;
+    font-size: 16px; font-weight: 800; color: #30d158;
+    margin-bottom: 14px;
+  }
+  .flow-card h3 { font-size: 15px; font-weight: 700; margin-bottom: 8px; }
+  .flow-card p { font-size: 13px; color: #8e8e93; line-height: 1.5; }
 
-        /* Trip type toggle */
-        .trip-toggle{padding:6px 12px;border:none;border-radius:16px;font-size:12px;font-weight:500;cursor:pointer;background:transparent;color:var(--muted);transition:all .15s}
-        .trip-toggle.on{background:var(--green);color:#fff;font-weight:500}
+  /* ======= INTERACTIVE DEMO ======= */
+  #demo { text-align: center; }
+  .demo-wrap {
+    display: flex; flex-direction: column;
+    align-items: center; gap: 20px;
+    margin-top: 16px;
+  }
 
-        /* ===== MAIN ===== */
-        .main{padding:20px 36px 140px;max-width:1500px;margin:0 auto}
+  /* ---- Watch ---- */
+  .watch {
+    width: 210px; height: 290px;
+    background: #1c1c1e;
+    border-radius: 50px;
+    border: 3px solid #3a3a3c;
+    position: relative;
+    box-shadow: 0 8px 60px rgba(0,0,0,.8), 0 0 80px rgba(48,209,88,.04);
+  }
+  .watch::after {
+    content: '';
+    position: absolute; right: -12px; top: 72px;
+    width: 8px; height: 36px;
+    background: #3a3a3c;
+    border-radius: 0 3px 3px 0;
+  }
+  .watch.shaking { animation: shake .07s infinite alternate; }
+  .display {
+    position: absolute; inset: 14px;
+    background: #000; border-radius: 38px;
+    overflow: hidden;
+  }
 
-        /* Info line (compact) */
-        .info-line{font-size:11px;color:var(--muted);margin-bottom:16px;line-height:1.6}
-        .info-line b{color:var(--green)}
+  .scr {
+    display: none; flex-direction: column;
+    align-items: center;
+    width: 100%; height: 100%;
+    padding: 10px 12px 8px;
+  }
+  .scr.show { display: flex; }
 
-        /* Note box (blackout info) */
-        .warn-box{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:8px 14px;margin-bottom:14px;font-size:11px;color:var(--muted);display:none;line-height:1.5}
+  /* S1: Idle */
+  .s1-title { font-size: 13px; font-weight: 700; margin-top: 2px; }
+  .s1-status { font-size: 9px; font-weight: 600; color: #666; text-transform: uppercase; letter-spacing: .5px; margin-top: 2px; }
+  .s1-status.on { color: #30d158; }
+  .s1-circle {
+    width: 56px; height: 56px; border-radius: 50%;
+    background: #48484a;
+    display: flex; align-items: center; justify-content: center;
+    margin: 14px 0 0; position: relative; transition: background .4s;
+  }
+  .s1-circle.on { background: #30d158; }
+  .s1-circle .heart { font-size: 22px; }
+  .s1-circle .ring {
+    display: none; position: absolute; inset: -8px;
+    border: 2px solid rgba(48,209,88,.35);
+    border-radius: 50%;
+    animation: pulse 1.6s ease-in-out infinite;
+  }
+  .s1-circle.on .ring { display: block; }
+  .s1-btn {
+    margin-top: 12px; width: 100%; padding: 10px;
+    border: none; border-radius: 10px;
+    font-size: 12px; font-weight: 700; color: #fff; cursor: pointer;
+  }
+  .s1-btn.start { background: #30d158; }
+  .s1-btn.stop  { background: #ff453a; }
+  .s1-readout {
+    margin-top: 8px; width: 100%;
+    display: flex; justify-content: space-between;
+    padding: 5px 8px; background: rgba(255,255,255,.05); border-radius: 6px;
+  }
+  .s1-readout .lbl { font-size: 8px; color: #636366; font-weight: 600; }
+  .s1-readout .val { font-size: 10px; font-family: monospace; color: #30d158; }
+  .s1-readout .val.off { color: #ff9f0a; }
 
-        /* Section headings */
-        .section-title{font-size:18px;font-weight:700;margin-bottom:4px;color:var(--text)}
-        .section-sub{font-size:12px;color:var(--muted);margin-bottom:14px}
+  /* S2: Detecting */
+  .s2-title { font-size: 12px; font-weight: 700; margin-top: 4px; }
+  .s2-warn { font-size: 11px; font-weight: 700; color: #ff9f0a; margin-top: 4px; animation: blink .55s infinite; }
+  .s2-wave {
+    width: 100%; height: 56px; margin-top: 10px;
+    background: rgba(255,255,255,.03); border-radius: 6px;
+    overflow: hidden; position: relative;
+  }
+  .s2-wave .bar {
+    position: absolute; bottom: 0; width: 3px;
+    background: #ff453a; border-radius: 2px 2px 0 0;
+    animation: waveBar .3s ease-in-out infinite alternate;
+  }
+  .s2-bar-wrap {
+    width: 100%; height: 6px;
+    background: rgba(255,255,255,.08); border-radius: 3px;
+    margin-top: 8px; overflow: hidden;
+  }
+  .s2-fill {
+    height: 100%; width: 0%;
+    background: linear-gradient(90deg, #ff9f0a, #ff453a);
+    border-radius: 3px; transition: width .25s linear;
+  }
+  .s2-label { font-size: 9px; color: #8e8e93; margin-top: 4px; }
 
-        /* Filter chips */
-        .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-        .filter-chip{padding:6px 16px;border-radius:18px;font-size:12px;font-weight:500;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted);transition:all .15s}
-        .filter-chip.on{border-color:var(--green);color:#fff;background:var(--green)}
-        .filter-chip:hover:not(.on){border-color:var(--green);color:var(--green);background:var(--green-light)}
-        .filter-group{display:flex;gap:6px;align-items:center}
-        .filter-sep{width:1px;height:22px;background:var(--border);margin:0 4px}
+  /* S3: Countdown */
+  .s3-header { font-size: 12px; font-weight: 800; color: #ff453a; margin-top: 2px; }
+  .s3-sub { font-size: 8px; color: #ff9f0a; margin-top: 1px; }
+  .s3-ring { width: 90px; height: 90px; margin: 8px 0 6px; position: relative; }
+  .s3-ring svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+  .s3-ring .bg { fill: none; stroke: rgba(255,255,255,.07); stroke-width: 5; }
+  .s3-ring .fg {
+    fill: none; stroke: #ff453a; stroke-width: 5;
+    stroke-linecap: round;
+    stroke-dasharray: 251; stroke-dashoffset: 0;
+    transition: stroke-dashoffset .15s linear;
+  }
+  .s3-num {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-58%);
+    font-size: 28px; font-weight: 800; font-family: monospace; color: #fff;
+  }
+  .s3-sec {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,55%);
+    font-size: 8px; color: #636366;
+  }
+  .s3-badge {
+    padding: 3px 10px;
+    background: rgba(255,255,255,.05); border-radius: 6px;
+    font-size: 9px; color: #aeaeb2;
+  }
+  .s3-badge b { color: #fff; font-weight: 600; }
+  .s3-ok {
+    margin-top: auto; width: 100%; padding: 11px;
+    border: none; border-radius: 10px; background: #30d158;
+    font-size: 14px; font-weight: 800; color: #fff;
+    letter-spacing: 1px; cursor: pointer;
+  }
+  .s3-ok:active { transform: scale(.96); }
 
-        /* ===== STATS ===== */
-        .stats{display:flex;gap:12px;margin-bottom:18px;flex-wrap:wrap}
-        .stat{background:#fff;border-radius:var(--radius);padding:12px 18px;border:1px solid var(--border);min-width:110px}
-        .stat .num{font-size:24px;font-weight:800;color:var(--green)}
-        .stat .lbl{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;margin-top:1px;font-weight:500}
+  /* S4: Sent */
+  .s4 { justify-content: center; gap: 6px; }
+  .s4-check {
+    width: 54px; height: 54px; border-radius: 50%; background: #30d158;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; animation: pop .35s ease;
+  }
+  .s4-title { font-size: 15px; font-weight: 700; }
+  .s4-detail { font-size: 9px; color: #8e8e93; text-align: center; }
+  .s4-sms {
+    width: 100%; padding: 7px 8px;
+    background: rgba(48,209,88,.08);
+    border: 1px solid rgba(48,209,88,.18); border-radius: 8px;
+  }
+  .s4-sms div { font-size: 8px; color: #aeaeb2; line-height: 1.6; }
+  .s4-sms .hi { color: #fff; font-weight: 600; font-size: 9px; }
+  .s4-sms .link { color: #0a84ff; }
 
-        /* ===== DESTINATION GRID ===== */
-        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-        .card{background:#fff;border-radius:var(--radius);padding:16px;border:1px solid var(--border);transition:all .15s;cursor:pointer;display:block;position:relative}
-        .card:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:var(--shadow-lg)}
-        .card .code{font-size:26px;font-weight:800;color:var(--green)}
-        .card .name{font-size:13px;margin-top:2px;font-weight:500}
-        .card .region{font-size:11px;color:var(--muted);margin-top:1px}
-        .card .intl-badge{position:absolute;top:12px;right:12px;background:var(--indigo-bg);color:var(--indigo);font-size:9px;font-weight:700;padding:2px 7px;border-radius:5px;text-transform:uppercase;letter-spacing:0.3px}
-        .card .seasonal-badge{position:absolute;top:12px;right:12px;background:#fef3c7;color:#92400e;font-size:9px;font-weight:600;padding:2px 7px;border-radius:5px;letter-spacing:0.2px}
-        .card .intl-badge+.seasonal-badge{top:32px}
-        .card .freq-note{margin-top:5px;font-size:10px;color:#92400e;font-weight:500}
-        .card.low-freq{border-left:4px solid #f59e0b}
-        .card.low-freq .code{color:#b45309}
-        .low-freq-warn{background:#fef3c7;color:#92400e;font-size:10px;padding:5px 8px;border-radius:6px;margin-top:8px;font-weight:500;line-height:1.4}
-        .card .no-route-note{margin-top:6px;font-size:10px;color:var(--danger);font-weight:500}
-        .card.connecting{border-style:dashed;border-color:var(--border);opacity:0.75}
-        .card.connecting:hover{opacity:1;border-color:var(--indigo);transform:translateY(-2px)}
-        .card.connecting .code{color:var(--muted)}
-        .card.connecting .hint{color:var(--indigo)}
-        .connecting-badge{position:absolute;top:8px;right:10px;background:#e8f0fe;color:var(--indigo);font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase}
-        .connecting-note{margin-top:6px;font-size:10px;color:var(--muted);font-weight:500}
-        .card .hint{margin-top:8px;font-size:10px;color:var(--muted);opacity:0;transition:opacity .2s}
-        .card:hover .hint{opacity:1}
-        .route-section-label{font-size:13px;font-weight:700;color:var(--green);margin:20px 0 10px;display:flex;align-items:center;gap:8px}
-        .route-section-label .count{font-weight:400;color:var(--muted);font-size:11px}
-        .route-section-label:first-of-type{margin-top:0}
-        .no-route-divider{border:none;border-top:1px dashed var(--border);margin:24px 0 8px}
+  /* S5: Cancelled */
+  .s5 { justify-content: center; gap: 8px; }
+  .s5-icon {
+    width: 54px; height: 54px; border-radius: 50%; background: #0a84ff;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; animation: pop .35s ease;
+  }
+  .s5-title { font-size: 15px; font-weight: 700; }
+  .s5-detail { font-size: 10px; color: #8e8e93; text-align: center; line-height: 1.5; }
 
-        /* Empty state */
-        .empty-state{text-align:center;padding:32px 20px;color:var(--muted)}
-        .empty-state .icon{font-size:36px;margin-bottom:8px}
-        .empty-state h3{font-size:16px;color:var(--text);margin-bottom:4px;font-weight:600}
-        .empty-state p{font-size:13px}
+  /* ---- Demo Controls ---- */
+  .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+  .ctrl {
+    padding: 10px 20px;
+    border: 1px solid #3a3a3c; background: transparent;
+    color: #aeaeb2; border-radius: 10px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s;
+  }
+  .ctrl:hover { background: rgba(255,255,255,.06); color: #fff; border-color: #636366; }
+  .dots { display: flex; gap: 7px; margin-top: 16px; justify-content: center; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: #3a3a3c; transition: background .3s; }
+  .dot.on { background: #0a84ff; }
+  .caption {
+    font-size: 18px; color: #f5f5f7; min-height: 52px; margin-top: 16px;
+    font-weight: 500; letter-spacing: 0.01em; line-height: 1.5;
+    transition: all .4s ease; max-width: 420px; margin-left: auto; margin-right: auto;
+    background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.1);
+    border-radius: 14px; padding: 14px 20px;
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+    box-shadow: 0 2px 12px rgba(0,0,0,.25);
+  }
+  .caption .cap-label {
+    display: inline-block; font-size: 11px; font-weight: 700; letter-spacing: 0.08em;
+    text-transform: uppercase; padding: 3px 10px; border-radius: 6px;
+    margin-right: 8px; vertical-align: middle; position: relative; top: -1px;
+  }
+  .cap-sense { background: rgba(10,132,255,.25); color: #0a84ff; border: 1px solid rgba(10,132,255,.3); }
+  .cap-detect { background: rgba(255,69,58,.25); color: #ff453a; border: 1px solid rgba(255,69,58,.3); }
+  .cap-count { background: rgba(255,159,10,.25); color: #ff9f0a; border: 1px solid rgba(255,159,10,.3); }
+  .cap-alert { background: rgba(48,209,88,.25); color: #30d158; border: 1px solid rgba(48,209,88,.3); }
+  .cap-info { background: rgba(174,174,178,.2); color: #aeaeb2; border: 1px solid rgba(174,174,178,.2); }
 
-        /* ===== BOOK NOW BANNER ===== */
-        .book-now h2{font-size:17px;font-weight:700;color:var(--text);display:flex;align-items:center;gap:8px}
-        .book-now .bn-sub{font-size:12px;color:var(--muted);margin:2px 0 12px;line-height:1.5}
-        .bn-label{font-size:13px;font-weight:700;color:var(--green);margin:16px 0 8px;display:flex;align-items:center;gap:8px}
-        .bn-label .bn-count{font-weight:400;color:var(--muted);font-size:11px}
-        .bn-label .bn-date{font-weight:500;color:var(--muted);font-size:11px;margin-left:auto}
-        .bn-scroll{display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;-webkit-overflow-scrolling:touch;scroll-snap-type:x proximity}
-        .bn-scroll::-webkit-scrollbar{height:4px}
-        .bn-scroll::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:2px}
-        .sug-card{flex:0 0 155px;background:#fff;border-radius:var(--radius);padding:12px 14px;border:1px solid var(--border);transition:all .15s;cursor:pointer;display:block;scroll-snap-align:start;position:relative}
-        .sug-card:hover{border-color:var(--green);transform:translateY(-2px);box-shadow:var(--shadow)}
-        .sug-card .sc-code{font-size:20px;font-weight:800;color:var(--green)}
-        .sug-card .sc-name{font-size:12px;font-weight:500;margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .sug-card .sc-region{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-        .sug-card .sc-date{font-size:11px;color:var(--green);font-weight:600;margin-top:6px}
-        .sug-card .sc-freq{font-size:9px;color:#92400e;margin-top:2px;font-weight:500}
-        .sug-card .sc-intl{position:absolute;top:8px;right:10px;background:var(--indigo-bg);color:var(--indigo);font-size:8px;font-weight:700;padding:2px 6px;border-radius:4px;text-transform:uppercase}
-        .sug-card.sc-low{border-left:3px solid #f59e0b}
-        .sug-card.sc-low .sc-code{color:#b45309}
-        .bn-footer{text-align:center;margin-top:16px;padding-top:12px;border-top:1px solid var(--border);font-size:12px;color:var(--muted)}
+  /* ======= FEATURES ======= */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+  }
+  .feat {
+    background: rgba(255,255,255,.03);
+    border: 1px solid rgba(255,255,255,.06);
+    border-radius: 16px;
+    padding: 24px;
+  }
+  .feat-icon {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 14px;
+  }
+  .feat h3 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
+  .feat p { font-size: 13px; color: #8e8e93; line-height: 1.5; }
 
-        /* ===== CALENDAR CAROUSEL ===== */
-        .cal-section{margin-bottom:20px}
-        .cal-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
-        .cal-header h2{font-size:15px;font-weight:700;color:var(--text)}
-        .cal-nav{display:flex;gap:6px;align-items:center}
-        .cal-nav button{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--border);background:#fff;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;color:var(--muted);transition:all .15s}
-        .cal-nav button:hover{border-color:var(--green);color:var(--green)}
-        .cal-nav button:disabled{opacity:0.3;cursor:not-allowed}
-        .cal-legend{display:flex;gap:14px;font-size:10px;color:var(--muted)}
-        .cal-legend i{display:flex;align-items:center;gap:5px;font-style:normal;font-weight:500}
-        .cal-legend .dot{width:10px;height:10px;border-radius:3px}
+  /* ======= TECH STACK ======= */
+  .tech-row {
+    display: flex; flex-wrap: wrap; gap: 12px;
+    justify-content: center;
+  }
+  .tech-pill {
+    padding: 8px 18px;
+    background: rgba(255,255,255,.04);
+    border: 1px solid rgba(255,255,255,.08);
+    border-radius: 10px;
+    font-size: 13px; font-weight: 600; color: #aeaeb2;
+  }
 
-        .cals{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-        .cal{background:#fff;border-radius:var(--radius);padding:14px;border:1px solid var(--border)}
-        .cal h3{font-size:13px;font-weight:700;margin-bottom:10px;text-align:center;color:var(--text)}
-        .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:1px}
-        .cal-hd{text-align:center;font-size:9px;font-weight:700;color:var(--muted);padding:4px 0;text-transform:uppercase;letter-spacing:0.3px}
-        .cal-d{text-align:center;padding:6px 2px;font-size:11px;border-radius:6px;cursor:pointer;transition:all .12s;user-select:none;font-weight:500;color:var(--text)}
-        .cal-d:hover:not(.bo):not(.empty):not(.past){background:var(--green-light);color:var(--green)}
-        .cal-d.bo{background:var(--danger-bg);color:var(--danger);cursor:not-allowed;text-decoration:line-through;font-weight:600}
-        .cal-d.today{outline:2px solid var(--green);outline-offset:-2px;font-weight:700}
-        .cal-d.sel{background:var(--green);color:#fff;font-weight:700}
-        .cal-d.empty{cursor:default}
-        .cal-d.past{opacity:0.25;cursor:default;color:var(--muted)}
-        .cal-d.in-range{background:var(--green-light);color:var(--green)}
+  /* ======= FOOTER ======= */
+  footer {
+    text-align: center;
+    padding: 40px 24px;
+    border-top: 1px solid rgba(255,255,255,.06);
+    font-size: 13px; color: #636366;
+  }
 
-        /* ===== FLEX DATE POPUP ===== */
-        .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.4);z-index:9999;display:none;align-items:center;justify-content:center;backdrop-filter:blur(2px)}
-        .modal-overlay.show{display:flex}
-        .modal{background:#fff;border-radius:12px;padding:24px 28px;max-width:420px;width:90%;box-shadow:var(--shadow-lg);position:relative;max-height:85vh;overflow-y:auto}
-        .modal-close{position:absolute;top:12px;right:14px;background:none;border:none;font-size:20px;cursor:pointer;color:var(--muted);padding:4px 8px;border-radius:6px;transition:all .15s}
-        .modal-close:hover{background:var(--bg);color:var(--text)}
-        .modal h3{font-size:18px;font-weight:700;margin-bottom:2px;display:flex;align-items:center;gap:8px}
-        .modal .m-sub{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5}
-        .modal .m-dest{font-size:28px;font-weight:800;color:var(--green)}
-        .modal .m-name{font-size:14px;font-weight:500;color:var(--text)}
-        .modal .m-region{font-size:12px;color:var(--muted);margin-bottom:12px}
-        .modal .m-freq{display:inline-block;background:var(--warn-bg);color:var(--warn);font-size:11px;font-weight:600;padding:3px 10px;border-radius:6px;margin-bottom:14px}
-        .modal .m-label{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:8px}
-        .date-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
-        .date-btn{display:flex;flex-direction:column;align-items:center;padding:12px 8px;border-radius:var(--radius);border:1px solid var(--border);background:#fff;cursor:pointer;transition:all .15s;text-decoration:none;color:var(--text)}
-        .date-btn:hover{border-color:var(--green);background:var(--green-light);transform:translateY(-1px)}
-        .date-btn .db-day{font-size:13px;font-weight:700;color:var(--green)}
-        .date-btn .db-date{font-size:11px;color:var(--muted)}
-        .date-btn .db-arrow{font-size:10px;color:var(--green);margin-top:4px;font-weight:600}
-        .date-btn.db-bo{opacity:0.35;pointer-events:none;border-style:dashed}
-        .modal .m-tip{font-size:11px;color:var(--muted);text-align:center;padding-top:10px;border-top:1px solid var(--border);line-height:1.5}
+  /* ======= KEYFRAMES ======= */
+  @keyframes shake { from { transform: translate(-2px,1px) rotate(-.4deg); } to { transform: translate(2px,-1px) rotate(.4deg); } }
+  @keyframes pulse { 0% { transform: scale(1); opacity: .7; } 100% { transform: scale(1.35); opacity: 0; } }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+  @keyframes pop { 0% { transform: scale(.4); opacity: 0; } 70% { transform: scale(1.12); } 100% { transform: scale(1); opacity: 1; } }
+  @keyframes waveBar { to { height: var(--h); } }
 
-        /* ===== HELP SEARCH ===== */
-        .help-bar{margin-bottom:18px}
-        .help-input-wrap{position:relative;display:flex;align-items:center;gap:0}
-        .help-input{width:100%;padding:11px 48px 11px 40px;border-radius:24px;border:1px solid var(--border);background:#fff;font-size:14px;color:var(--text);outline:none;transition:all .15s}
-        .help-input::placeholder{color:#9aa0a6}
-        .help-input:focus{border-color:var(--green);box-shadow:0 0 0 2px rgba(26,135,58,0.15)}
-        .help-icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--muted);display:flex;align-items:center}
-        .help-icon svg{width:16px;height:16px}
-        .help-send{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:32px;height:32px;border-radius:50%;border:none;background:var(--green);color:#fff;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;opacity:0.5}
-        .help-send:hover{opacity:1}
-        .help-send.active{opacity:1}
-        .help-send svg{width:16px;height:16px}
-        .help-suggestions{display:flex;gap:5px;overflow-x:auto;white-space:nowrap;-webkit-overflow-scrolling:touch;padding:6px 0 0;justify-content:center}
-        .help-suggestions::-webkit-scrollbar{height:0}
-        .help-sug{padding:4px 12px;border-radius:14px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--muted);transition:all .15s;flex-shrink:0}
-        .help-sug:hover{border-color:var(--green);color:var(--green);background:var(--green-light)}
-        .help-answer{margin:12px 0 0;display:none;animation:hrSlide .25s ease}
-        .help-answer.show{display:block}
-        @keyframes hrSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
-        .ha-box{background:#fff;border:1px solid var(--border);border-radius:var(--radius);padding:16px 20px;line-height:1.6}
-        .ha-box .ha-q{font-size:14px;font-weight:600;color:var(--text);margin-bottom:8px}
-        .ha-box .ha-a{font-size:13px;color:var(--text);line-height:1.7}
-        .ha-box .ha-a b{color:var(--green)}
-        .ha-related{margin-top:10px;padding-top:10px;border-top:1px solid var(--border)}
-        .ha-related-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:6px}
-        .ha-related-links{display:flex;flex-wrap:wrap;gap:6px}
-        .ha-link{padding:5px 14px;border-radius:16px;font-size:12px;cursor:pointer;border:1px solid var(--border);background:#fff;color:var(--green);transition:all .15s;font-weight:500}
-        .ha-link:hover{background:var(--green-light);border-color:var(--green)}
-        .ha-none{font-size:13px;color:var(--muted);padding:12px 0;text-align:center}
-
-        /* ===== RESPONSIVE ===== */
-        @media(max-width:1100px){
-            .cals{grid-template-columns:repeat(3,1fr)}
-        }
-        @media(max-width:768px){
-            .header,.search-bar,.main{padding:14px}
-            .ai{width:100%}
-            .grid{grid-template-columns:1fr 1fr}
-            .cals{grid-template-columns:repeat(2,1fr)}
-            .header .tips{display:none}
-        }
-        @media(max-width:480px){
-            .grid{grid-template-columns:1fr}
-            .cals{grid-template-columns:1fr}
-        }
-
-        /* ===== RULES PANEL ===== */
-        .rules-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);cursor:pointer;margin:0 auto;max-width:1500px;font-size:13px;font-weight:600;color:var(--green);transition:all .15s}
-        .rules-toggle:hover{background:#d4edda;border-color:var(--green)}
-        .rules-toggle .arrow{transition:transform .2s;font-size:16px}
-        .rules-toggle.open .arrow{transform:rotate(180deg)}
-        .rules-panel{max-width:1500px;margin:0 auto;overflow:hidden;max-height:0;transition:max-height .3s ease;border-left:1px solid var(--green-mid);border-right:1px solid var(--green-mid)}
-        .rules-panel.open{max-height:600px;border-bottom:1px solid var(--green-mid);border-radius:0 0 var(--radius) var(--radius)}
-        .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:16px 20px;background:#fff}
-        .rule-card{padding:10px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--border)}
-        .rule-card .rule-icon{font-size:18px;margin-bottom:4px}
-        .rule-card .rule-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
-        .rule-card .rule-text{font-size:11px;color:var(--muted);line-height:1.5}
-        .rule-card .rule-text b{color:var(--text)}
-        @media(max-width:768px){
-            .rules-grid{grid-template-columns:1fr 1fr}
-            .rules-toggle,.rules-panel{margin:0 14px}
-        }
-        @media(max-width:480px){
-            .rules-grid{grid-template-columns:1fr}
-        }
-
-        ::-webkit-scrollbar{width:6px}
-        ::-webkit-scrollbar-track{background:transparent}
-        ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
-        ::-webkit-scrollbar-thumb:hover{background:#9ca3af}
-    </style>
+  @media (max-width: 600px) {
+    nav { padding: 10px 16px; }
+    .nav-links { display: none; }
+    section { padding: 60px 16px; }
+  }
+</style>
 </head>
 <body>
 
-<div class="modal-overlay" id="flexModal" onclick="if(event.target===this)closeFlexModal()">
-    <div class="modal" id="flexModalContent"></div>
-</div>
+<nav>
+  <div class="nav-brand"><span>Seizure</span>Guard</div>
+  <div class="nav-links">
+    <a href="#how">How It Works</a>
+    <a href="#demo">Live Demo</a>
+    <a href="#features">Features</a>
+    <a href="#tech">Tech Stack</a>
+  </div>
+</nav>
 
-<div class="header" onclick="window.location.reload()">
-    <div>
-        <h1><span style="font-size:24px">&#9992;</span> GoWild Flight Finder</h1>
-    </div>
-    <div class="tips">
-        <span><b>Domestic:</b> book 1 day before</span>
-        <span><b>Int'l:</b> book 10 days before</span>
-        <span><b>Tip:</b> Log into Frontier first to see $0.01 fares</span>
-    </div>
-</div>
+<!-- HERO -->
+<section class="hero">
+  <div class="badge">watchOS + iOS App</div>
+  <h1>Seizure detection,<br><span class="grad">right on your wrist.</span></h1>
+  <p class="hero-sub">SeizureGuard monitors motion data on Apple Watch to detect seizure-like movements and automatically alert your emergency contact with a live GPS location.</p>
+  <a href="#demo" class="hero-cta">See it in action</a>
+</section>
 
-<div class="rules-toggle" id="rulesToggle" onclick="this.classList.toggle('open');document.getElementById('rulesPanel').classList.toggle('open')">
-    <span>&#9889; GoWild in 30 Seconds — The Rules of the Road</span>
-    <span class="arrow">&#9660;</span>
-</div>
-<div class="rules-panel" id="rulesPanel">
-    <div class="rules-grid">
-        <div class="rule-card">
-            <div class="rule-icon">&#128176;</div>
-            <div class="rule-title">What You Pay</div>
-            <div class="rule-text"><b>$0.01 airfare</b> + taxes/fees per flight. Domestic total: <b>~$7-15</b>. International total: <b>~$30-80+</b>. That's it — no hidden fare buckets.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#128197;</div>
-            <div class="rule-title">Booking Windows</div>
-            <div class="rule-text"><b>Domestic:</b> opens 1 day before departure. <b>International:</b> opens 10 days before. Early Booking available for a small extra fee.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#128274;</div>
-            <div class="rule-title">Must Be Logged In</div>
-            <div class="rule-text">GoWild fares only appear when you're <b>logged into your FRONTIER Miles account</b> on flyfrontier.com. No login = no $0.01 fares.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#127890;</div>
-            <div class="rule-title">Bags Aren't Free</div>
-            <div class="rule-text">Only a <b>personal item</b> (14x18x8") is included. Carry-on: <b>~$40-60</b>. Checked bag: <b>~$35-55</b>. Always buy bags online — gate prices are brutal.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#128186;</div>
-            <div class="rule-title">Seats: Luck of the Draw</div>
-            <div class="rule-text">No free seat selection. You're <b>assigned at check-in</b>. Pay $6-15 for standard or $15-50+ for Stretch. Elite Status gets free picks.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#128683;</div>
-            <div class="rule-title">Blackout Dates</div>
-            <div class="rule-text"><b>~60 days/year</b> are blacked out around holidays and peak travel. Check the calendar on this page — red dates = no GoWild.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#9888;&#65039;</div>
-            <div class="rule-title">Never No-Show</div>
-            <div class="rule-text"><b>Always cancel before departure</b> if plans change. Repeated no-shows = penalties or <b>pass revocation without refund</b>. It takes 30 seconds in the app.</div>
-        </div>
-        <div class="rule-card">
-            <div class="rule-icon">&#128161;</div>
-            <div class="rule-title">Pro Tips</div>
-            <div class="rule-text">Check at <b>midnight</b> when domestic opens. <b>Tue/Wed</b> have best availability. <b>Saturday</b> is key for most int'l routes. Have backup destinations ready.</div>
-        </div>
+<!-- HOW IT WORKS -->
+<section id="how">
+  <h2>How It Works</h2>
+  <p class="section-sub">From detection to alert in under 15 seconds. The wearer can always cancel with a single tap.</p>
+  <div class="flow">
+    <div class="flow-card">
+      <div class="flow-num">1</div>
+      <h3>Monitor</h3>
+      <p>Accelerometer reads motion at 50 Hz on a background thread. Zero battery drain from the UI.</p>
     </div>
-</div>
+    <div class="flow-card">
+      <div class="flow-num">2</div>
+      <h3>Detect</h3>
+      <p>Sustained high-magnitude movement for 5+ seconds triggers a seizure-like motion pattern match.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">3</div>
+      <h3>Countdown</h3>
+      <p>10-second countdown with haptics every second. The wearer can tap "I'M OK" to cancel instantly.</p>
+    </div>
+    <div class="flow-card">
+      <div class="flow-num">4</div>
+      <h3>Alert</h3>
+      <p>Critical notification fires immediately. SMS opens pre-filled with GPS location and Google Maps link.</p>
+    </div>
+  </div>
+</section>
 
-<div class="search-bar">
-    <div class="fg">
-        <label>Your Airport</label>
-        <div class="aw">
-            <input type="text" class="ai" id="origin" placeholder="Type airport code or city..." autocomplete="off">
-            <div class="ad" id="dropdown"></div>
+<!-- INTERACTIVE DEMO -->
+<section id="demo">
+  <h2>Interactive Demo</h2>
+  <p class="section-sub">Click through the full alert flow or see what happens when the user cancels.</p>
+  <div class="demo-wrap">
+    <div class="watch" id="watch">
+      <div class="display">
+        <!-- S1: Idle -->
+        <div class="scr show" id="s1">
+          <div class="s1-title">SeizureGuard</div>
+          <div class="s1-status" id="s1Status">Inactive</div>
+          <div class="s1-circle" id="s1Circle"><div class="ring"></div><span class="heart">&#x2665;</span></div>
+          <button class="s1-btn start" id="s1Btn" onclick="toggleMonitor()">Start Monitoring</button>
+          <div class="s1-readout">
+            <div><div class="lbl">ACCEL</div><div class="val" id="s1Accel">0.00 g</div></div>
+            <div style="text-align:right"><div class="lbl">STATUS</div><div class="val off" id="s1Stat">Idle</div></div>
+          </div>
         </div>
-    </div>
-    <div class="fg">
-        <label>Trip Type</label>
-        <div style="display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:2px;border:1.5px solid var(--border)">
-            <button type="button" class="trip-toggle on" id="togRT" onclick="setTripType('rt')">Round Trip</button>
-            <button type="button" class="trip-toggle" id="togOW" onclick="setTripType('ow')">One Way</button>
+        <!-- S2: Detecting -->
+        <div class="scr" id="s2">
+          <div class="s2-title">SeizureGuard</div>
+          <div class="s2-warn">MOTION DETECTED</div>
+          <div class="s2-wave" id="s2Wave"></div>
+          <div class="s2-bar-wrap"><div class="s2-fill" id="s2Fill"></div></div>
+          <div class="s2-label" id="s2Label">Analyzing pattern...</div>
         </div>
-    </div>
-    <div class="fg">
-        <label>Dates</label>
-        <div style="display:flex;gap:2px;background:var(--bg);border-radius:8px;padding:2px;border:1.5px solid var(--border)">
-            <button type="button" class="trip-toggle on" id="togExact" onclick="setDateMode('exact')">Exact</button>
-            <button type="button" class="trip-toggle" id="togFlex" onclick="setDateMode('flex')">Flexible</button>
+        <!-- S3: Countdown -->
+        <div class="scr" id="s3">
+          <div class="s3-header">SEIZURE DETECTED</div>
+          <div class="s3-sub">Emergency alert sending</div>
+          <div class="s3-ring">
+            <svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="40"/><circle class="fg" id="s3Arc" cx="50" cy="50" r="40"/></svg>
+            <div class="s3-num" id="s3Num">10.0</div>
+            <div class="s3-sec">seconds</div>
+          </div>
+          <div class="s3-badge">Notifying <b>Mom</b></div>
+          <button class="s3-ok" id="s3Ok" onclick="cancelCountdown()">I'M OK</button>
         </div>
-    </div>
-    <div class="fg" id="dateFromGroup">
-        <label>Depart</label>
-        <input type="date" id="dateFrom">
-    </div>
-    <div class="fg" id="returnGroup">
-        <label>Return</label>
-        <input type="date" id="dateTo">
-    </div>
-    <div class="fg">
-        <label>&nbsp;</label>
-        <button class="btn btn-g" id="goBtn" onclick="showResults()">Find Flights</button>
-    </div>
-</div>
-
-<div class="main">
-    <div class="warn-box" id="blackoutWarn"></div>
-
-    <!-- Calendar carousel -->
-    <div class="cal-section">
-        <div class="cal-header">
-            <div style="display:flex;align-items:center;gap:16px">
-                <h2>Blackout Calendar</h2>
-                <div class="cal-legend">
-                    <i><span class="dot" style="background:var(--danger-light);border:1px solid var(--danger)"></span> Blackout</i>
-                    <i><span class="dot" style="background:var(--green)"></span> Selected</i>
-                    <i><span class="dot" style="outline:2px solid var(--green);outline-offset:-1px"></span> Today</i>
-                </div>
-            </div>
-            <div class="cal-nav">
-                <button id="calPrev" onclick="shiftCal(-1)">&#8249;</button>
-                <span style="font-size:11px;color:var(--muted);min-width:24px;text-align:center" id="calPage"></span>
-                <button id="calNext" onclick="shiftCal(1)">&#8250;</button>
-            </div>
+        <!-- S4: Sent -->
+        <div class="scr s4" id="s4">
+          <div class="s4-check">&#x2713;</div>
+          <div class="s4-title">Alert Sent</div>
+          <div class="s4-detail">Notification + SMS sent<br>with your live location</div>
+          <div class="s4-sms">
+            <div class="hi">SEIZURE ALERT</div>
+            <div>Time: 2/15/2026, 3:42 PM</div>
+            <div>Location: 37.7749, -122.4194</div>
+            <div class="link">maps.google.com/?q=37.77...</div>
+            <div>Please check on them.</div>
+          </div>
         </div>
-        <div class="cals" id="cals"></div>
-        <div style="text-align:center;margin-top:6px;font-size:10px;color:var(--muted)">Click any date to set your travel range</div>
+        <!-- S5: Cancelled -->
+        <div class="scr s5" id="s5">
+          <div class="s5-icon">&#x1F44D;</div>
+          <div class="s5-title">Alert Cancelled</div>
+          <div class="s5-detail">Glad you're okay!<br>Monitoring will resume.</div>
+        </div>
+      </div>
     </div>
 
-    <!-- Help Search Bar -->
-    <div class="help-bar">
-        <div class="help-input-wrap">
-            <span class="help-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
-            <input type="text" class="help-input" id="helpInput" placeholder="Ask about GoWild — bags, booking, blackout dates, tips..." autocomplete="off">
-            <button class="help-send" id="helpSend" onclick="submitHelp()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg></button>
-        </div>
-        <div class="help-suggestions" id="helpSugs"></div>
-        <div class="help-answer" id="helpAnswer"></div>
+    <div class="controls">
+      <button class="ctrl" onclick="playFull()">&#x25B6; Play Full Demo</button>
+      <button class="ctrl" onclick="playCancel()">Cancel Path</button>
+      <button class="ctrl" onclick="reset()">&#x21BA; Reset</button>
     </div>
+    <div class="dots"><div class="dot on" id="d0"></div><div class="dot" id="d1"></div><div class="dot" id="d2"></div><div class="dot" id="d3"></div></div>
+    <div class="caption" id="cap"><span class="cap-label cap-info">READY</span> Tap "Play Full Demo" to watch SeizureGuard in action</div>
+  </div>
+</section>
 
-    <div id="content">
-        <div class="empty-state">
-            <div class="icon">&#127758;</div>
-            <h3>Pick your dates above, then hit Find Flights</h3>
-            <p>You'll see every nonstop Frontier route from ATL with links to book.</p>
-        </div>
+<!-- FEATURES -->
+<section id="features">
+  <h2>Key Features</h2>
+  <p class="section-sub">Built for reliability when it matters most.</p>
+  <div class="features-grid">
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(48,209,88,.1);">&#x1F4A8;</div>
+      <h3>50 Hz Motion Analysis</h3>
+      <p>Accelerometer data processed on a dedicated background queue. No UI lag, no missed samples.</p>
     </div>
-</div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(255,69,58,.1);">&#x1F6A8;</div>
+      <h3>Critical Notifications</h3>
+      <p>Fires a critical-priority local notification immediately with no user interaction required.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(10,132,255,.1);">&#x1F4CD;</div>
+      <h3>Live GPS Location</h3>
+      <p>Captures real-time coordinates and includes a Google Maps link in every alert.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(255,159,10,.1);">&#x1F504;</div>
+      <h3>Auto-Restart</h3>
+      <p>Monitoring automatically resumes after an alert or cancellation. No manual restart needed.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(175,130,255,.1);">&#x267F;</div>
+      <h3>Full Accessibility</h3>
+      <p>VoiceOver labels and hints on every interactive element. Tested for screen reader compatibility.</p>
+    </div>
+    <div class="feat">
+      <div class="feat-icon" style="background:rgba(48,209,88,.1);">&#x1F512;</div>
+      <h3>Privacy First</h3>
+      <p>All data stays on-device. No cloud, no accounts. Includes Apple's required privacy manifest.</p>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK -->
+<section id="tech">
+  <h2>Tech Stack</h2>
+  <p class="section-sub">Native Apple frameworks for maximum reliability.</p>
+  <div class="tech-row">
+    <div class="tech-pill">SwiftUI</div>
+    <div class="tech-pill">CoreMotion</div>
+    <div class="tech-pill">CoreLocation</div>
+    <div class="tech-pill">WatchConnectivity</div>
+    <div class="tech-pill">UserNotifications</div>
+    <div class="tech-pill">MessageUI</div>
+    <div class="tech-pill">os.Logger</div>
+  </div>
+</section>
+
+<footer>
+  SeizureGuard &mdash; Built with care for people who need it most.
+</footer>
 
 <script>
-// ===== AIRPORT DATA =====
-const AIRPORTS = [
-    {code:'ABQ',name:'Albuquerque',region:'NM'},
-    {code:'ACY',name:'Atlantic City',region:'NJ'},
-    {code:'ATL',name:'Atlanta',region:'GA'},
-    {code:'AUA',name:'Aruba',region:'Aruba',intl:true},
-    {code:'AUS',name:'Austin',region:'TX'},
-    {code:'BDL',name:'Hartford',region:'CT'},
-    {code:'BHM',name:'Birmingham',region:'AL'},
-    {code:'BNA',name:'Nashville',region:'TN'},
-    {code:'BOI',name:'Boise',region:'ID'},
-    {code:'BOS',name:'Boston',region:'MA'},
-    {code:'BUF',name:'Buffalo',region:'NY'},
-    {code:'BUR',name:'Burbank',region:'CA'},
-    {code:'BWI',name:'Baltimore',region:'MD'},
-    {code:'CHS',name:'Charleston',region:'SC'},
-    {code:'CID',name:'Cedar Rapids',region:'IA'},
-    {code:'CLE',name:'Cleveland',region:'OH'},
-    {code:'CLT',name:'Charlotte',region:'NC'},
-    {code:'CMH',name:'Columbus',region:'OH'},
-    {code:'COS',name:'Colorado Springs',region:'CO'},
-    {code:'CVG',name:'Cincinnati',region:'OH'},
-    {code:'DAL',name:'Dallas Love Field',region:'TX'},
-    {code:'DCA',name:'Washington Reagan',region:'DC'},
-    {code:'DEN',name:'Denver',region:'CO'},
-    {code:'DFW',name:'Dallas/Fort Worth',region:'TX'},
-    {code:'DSM',name:'Des Moines',region:'IA'},
-    {code:'DTW',name:'Detroit',region:'MI'},
-    {code:'ELP',name:'El Paso',region:'TX'},
-    {code:'EWR',name:'Newark',region:'NJ'},
-    {code:'FAT',name:'Fresno',region:'CA'},
-    {code:'FLL',name:'Fort Lauderdale',region:'FL'},
-    {code:'GRR',name:'Grand Rapids',region:'MI'},
-    {code:'GSP',name:'Greenville',region:'SC'},
-    {code:'HNL',name:'Honolulu',region:'HI'},
-    {code:'HOU',name:'Houston Hobby',region:'TX'},
-    {code:'IAD',name:'Washington Dulles',region:'VA'},
-    {code:'IAH',name:'Houston Bush',region:'TX'},
-    {code:'IND',name:'Indianapolis',region:'IN'},
-    {code:'ISP',name:'Long Island',region:'NY'},
-    {code:'JAX',name:'Jacksonville',region:'FL'},
-    {code:'LAS',name:'Las Vegas',region:'NV'},
-    {code:'LAX',name:'Los Angeles',region:'CA'},
-    {code:'LGA',name:'New York LaGuardia',region:'NY'},
-    {code:'LIT',name:'Little Rock',region:'AR'},
-    {code:'MCI',name:'Kansas City',region:'MO'},
-    {code:'MCO',name:'Orlando',region:'FL'},
-    {code:'MDW',name:'Chicago Midway',region:'IL'},
-    {code:'MEM',name:'Memphis',region:'TN'},
-    {code:'MIA',name:'Miami',region:'FL'},
-    {code:'MKE',name:'Milwaukee',region:'WI'},
-    {code:'MSP',name:'Minneapolis',region:'MN'},
-    {code:'MSY',name:'New Orleans',region:'LA'},
-    {code:'MYR',name:'Myrtle Beach',region:'SC'},
-    {code:'OAK',name:'Oakland',region:'CA'},
-    {code:'OKC',name:'Oklahoma City',region:'OK'},
-    {code:'OMA',name:'Omaha',region:'NE'},
-    {code:'ONT',name:'Ontario',region:'CA'},
-    {code:'ORD',name:'Chicago O\'Hare',region:'IL'},
-    {code:'PBI',name:'West Palm Beach',region:'FL'},
-    {code:'PDX',name:'Portland',region:'OR'},
-    {code:'PHL',name:'Philadelphia',region:'PA'},
-    {code:'PHX',name:'Phoenix',region:'AZ'},
-    {code:'PIT',name:'Pittsburgh',region:'PA'},
-    {code:'PLS',name:'Providenciales',region:'Turks & Caicos',intl:true},
-    {code:'PNS',name:'Pensacola',region:'FL'},
-    {code:'PVD',name:'Providence',region:'RI'},
-    {code:'RDU',name:'Raleigh/Durham',region:'NC'},
-    {code:'RIC',name:'Richmond',region:'VA'},
-    {code:'RNO',name:'Reno',region:'NV'},
-    {code:'RSW',name:'Fort Myers',region:'FL'},
-    {code:'SAL',name:'San Salvador',region:'El Salvador',intl:true},
-    {code:'SAN',name:'San Diego',region:'CA'},
-    {code:'SAP',name:'San Pedro Sula',region:'Honduras',intl:true},
-    {code:'SAT',name:'San Antonio',region:'TX'},
-    {code:'SAV',name:'Savannah',region:'GA'},
-    {code:'SDF',name:'Louisville',region:'KY'},
-    {code:'SDQ',name:'Santo Domingo',region:'Dominican Republic',intl:true},
-    {code:'SEA',name:'Seattle',region:'WA'},
-    {code:'SFO',name:'San Francisco',region:'CA'},
-    {code:'SJC',name:'San Jose',region:'CA'},
-    {code:'SLC',name:'Salt Lake City',region:'UT'},
-    {code:'SMF',name:'Sacramento',region:'CA'},
-    {code:'SNA',name:'Orange County',region:'CA'},
-    {code:'SRQ',name:'Sarasota',region:'FL'},
-    {code:'STL',name:'St. Louis',region:'MO'},
-    {code:'SXM',name:'St. Maarten',region:'Sint Maarten',intl:true},
-    {code:'SYR',name:'Syracuse',region:'NY'},
-    {code:'TPA',name:'Tampa',region:'FL'},
-    {code:'TTN',name:'Trenton',region:'NJ'},
-    {code:'TUL',name:'Tulsa',region:'OK'},
-    {code:'TUS',name:'Tucson',region:'AZ'},
-    {code:'XNA',name:'Fayetteville',region:'AR'},
-    // International
-    {code:'CUN',name:'Cancun',region:'Mexico',intl:true},
-    {code:'GUA',name:'Guatemala City',region:'Guatemala',intl:true},
-    {code:'LIR',name:'Liberia',region:'Costa Rica',intl:true},
-    {code:'MBJ',name:'Montego Bay',region:'Jamaica',intl:true},
-    {code:'NAS',name:'Nassau',region:'Bahamas',intl:true},
-    {code:'POP',name:'Puerto Plata',region:'Dominican Republic',intl:true},
-    {code:'PUJ',name:'Punta Cana',region:'Dominican Republic',intl:true},
-    {code:'PVR',name:'Puerto Vallarta',region:'Mexico',intl:true},
-    {code:'SJD',name:'San Jose del Cabo',region:'Mexico',intl:true},
-    {code:'SJO',name:'San Jose',region:'Costa Rica',intl:true},
-    {code:'SJU',name:'San Juan',region:'Puerto Rico',intl:true},
-    {code:'STT',name:'St. Thomas',region:'US Virgin Islands',intl:true},
-    {code:'STX',name:'St. Croix',region:'US Virgin Islands',intl:true},
-];
+/* === Timer Management === */
+var timers = [];
+var accelTimer = null;
+var cdTimer = null;
+var fillTimer = null;
+var monitoring = false;
+var cdVal = 10;
+var cdCallback = null;
+var demoRunning = false;
 
-// ===== KNOWN ROUTES FROM EACH HUB =====
-const ROUTES = {
-    'ATL': {
-        routes: ['AUA','AUS','BDL','BNA','BOS','CLE','CLT','CMH','CUN','CVG','DEN','DFW','DTW',
-                 'EWR','FLL','GUA','IAD','IND','JAX','LAS','LAX','LGA','MBJ','MCO','MDW',
-                 'MIA','MKE','MSP','MSY','MYR','NAS','ONT','ORD','PBI','PHL','PHX','PIT',
-                 'PLS','PNS','PUJ','PVR','RDU','RSW','SAL','SAN','SAP','SDQ','SFO','SJD',
-                 'SJO','SJU','SLC','SRQ','STL','SXM','TPA','TTN'],
-    },
-    'DEN': {
-        routes: ['ABQ','ATL','AUS','BNA','BOI','BOS','BUR','CHS','CID','CLE','CLT','CMH',
-                 'COS','CUN','CVG','DAL','DCA','DFW','DSM','DTW','ELP','FAT','FLL','GRR',
-                 'HNL','HOU','IAD','IAH','IND','JAX','LAS','LAX','LGA','LIR','MBJ','MCI',
-                 'MCO','MDW','MEM','MIA','MKE','MSP','MSY','MYR','OAK','OKC','OMA','ONT',
-                 'ORD','PBI','PDX','PHL','PHX','PIT','PNS','PUJ','PVR','RDU','RIC','RNO',
-                 'RSW','SAN','SAT','SEA','SFO','SJC','SJD','SJU','SLC','SMF','SNA','SRQ',
-                 'STL','TPA','TUL','TUS','XNA'],
-    },
-    'MCO': {
-        routes: ['ABQ','ATL','AUS','BDL','BNA','BOS','BUF','BWI','CLE','CLT','CMH','CUN',
-                 'CVG','DCA','DEN','DFW','DSM','DTW','ELP','EWR','FLL','GRR','GSP','GUA',
-                 'HOU','IAD','IAH','IND','ISP','JAX','LAS','LAX','LGA','LIR','LIT','MBJ',
-                 'MCI','MDW','MEM','MIA','MKE','MSP','MSY','MYR','NAS','OAK','OKC','OMA',
-                 'ONT','ORD','PBI','PDX','PHL','PHX','PIT','PNS','POP','PUJ','PVD','RDU',
-                 'RIC','RNO','SAN','SAT','SDF','SEA','SFO','SJC','SJD','SJO','SJU','SLC',
-                 'SMF','SNA','STL','STT','STX','SYR','TUL','XNA'],
+function later(fn, ms) {
+  var t = setTimeout(fn, ms);
+  timers.push(t);
+  return t;
+}
+
+function killAllTimers() {
+  for (var i = 0; i < timers.length; i++) {
+    clearTimeout(timers[i]);
+    clearInterval(timers[i]);
+  }
+  timers = [];
+  if (accelTimer) { clearInterval(accelTimer); accelTimer = null; }
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+  if (fillTimer) { clearInterval(fillTimer); fillTimer = null; }
+}
+
+/* === Screen Management === */
+function show(id) {
+  var screens = document.querySelectorAll('.scr');
+  for (var i = 0; i < screens.length; i++) {
+    screens[i].classList.remove('show');
+  }
+  var target = document.getElementById(id);
+  if (target) target.classList.add('show');
+}
+
+function step(n, txt) {
+  for (var i = 0; i < 4; i++) {
+    var dot = document.getElementById('d' + i);
+    if (dot) dot.className = (i <= n) ? 'dot on' : 'dot';
+  }
+  var cap = document.getElementById('cap');
+  if (cap) cap.innerHTML = txt;
+}
+
+/* === Wave Bars (visual only) === */
+(function() {
+  var w = document.getElementById('s2Wave');
+  if (!w) return;
+  for (var i = 0; i < 30; i++) {
+    var bar = document.createElement('div');
+    bar.className = 'bar';
+    bar.style.left = (i * 6) + 'px';
+    bar.style.height = '4px';
+    bar.style.setProperty('--h', (8 + Math.random() * 44) + 'px');
+    bar.style.animationDelay = (Math.random() * 0.3) + 's';
+    bar.style.animationDuration = (0.15 + Math.random() * 0.25) + 's';
+    w.appendChild(bar);
+  }
+})();
+
+/* === Monitoring Toggle === */
+function toggleMonitor() {
+  monitoring = !monitoring;
+  var btn = document.getElementById('s1Btn');
+  var circle = document.getElementById('s1Circle');
+  var st = document.getElementById('s1Status');
+  var sv = document.getElementById('s1Stat');
+  var accel = document.getElementById('s1Accel');
+
+  if (monitoring) {
+    if (btn) { btn.textContent = 'Stop Monitoring'; btn.className = 's1-btn stop'; }
+    if (circle) circle.classList.add('on');
+    if (st) { st.textContent = 'Active'; st.className = 's1-status on'; }
+    if (sv) { sv.textContent = 'Running'; sv.className = 'val'; }
+    accelTimer = setInterval(function() {
+      if (accel) accel.textContent = (Math.random() * 0.3 + 0.04).toFixed(2) + ' g';
+    }, 180);
+    timers.push(accelTimer);
+  } else {
+    if (btn) { btn.textContent = 'Start Monitoring'; btn.className = 's1-btn start'; }
+    if (circle) circle.classList.remove('on');
+    if (st) { st.textContent = 'Inactive'; st.className = 's1-status'; }
+    if (sv) { sv.textContent = 'Idle'; sv.className = 'val off'; }
+    if (accelTimer) { clearInterval(accelTimer); accelTimer = null; }
+    if (accel) accel.textContent = '0.00 g';
+  }
+}
+
+/* === Countdown === */
+function startCountdown(onDone) {
+  cdVal = 10;
+  cdCallback = onDone;
+  updateCountdownDisplay();
+  cdTimer = setInterval(function() {
+    cdVal -= 0.1;
+    if (cdVal <= 0.05) {
+      cdVal = 0;
+      clearInterval(cdTimer);
+      cdTimer = null;
+      updateCountdownDisplay();
+      if (cdCallback) cdCallback();
+      return;
     }
-};
-
-// ===== SEASONAL ROUTE DETAILS =====
-const SEASONAL = {
-    // days: 0=Sun 1=Mon 2=Tue 3=Wed 4=Thu 5=Fri 6=Sat
-    'ATL': {
-        'AUA': { months:[5,6,7,8], freq:'1x/wk', label:'Summer only', days:[6] },
-        'GUA': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        // LIR removed from ATL — nonstop is Delta only, not Frontier
-        'MBJ': { months:[11,12,1,2,3,4], freq:'3-4x/wk', label:'Winter', days:[0,1,2,4] },
-        'NAS': { months:[12,1,2,3,4], freq:'1x/wk', label:'Winter', days:[6] },
-        'ONT': { months:[5,6,7,8,9,10,11], freq:'2-3x/wk', label:'Seasonal' },
-        'PLS': { months:[12,1,2,3,4], freq:'1x/wk', label:'Winter', days:[6] },
-        'PUJ': { months:[11,12,1,2,3,4], freq:'daily', label:'Winter', days:[0,1,2,3,4,5,6] },
-        'PVR': { months:[12,1,2,3,4], freq:'1x/wk', label:'Winter', days:[6] },
-        'SAL': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'SAP': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter', days:[6] },
-        'SDQ': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'SJD': { months:[12,1,2,3,4], freq:'1x/wk', label:'Winter', days:[6] },
-        'SJO': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter', days:[6] },
-        'SXM': { months:[12,1,2,3,4], freq:'1-2x/wk', label:'Winter' },
-    },
-    'DEN': {
-        'CUN': { months:[11,12,1,2,3,4], freq:'3x/wk', label:'Winter' },
-        'HNL': { months:[11,12,1,2,3], freq:'2x/wk', label:'Winter' },
-        'LIR': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-        'MBJ': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-        'PUJ': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-        'PVR': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'SJD': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'SJU': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-    },
-    'MCO': {
-        'CUN': { months:[11,12,1,2,3,4,5,6], freq:'daily', label:'Peak season' },
-        'GUA': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-        'LIR': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'MBJ': { months:[11,12,1,2,3,4,5,6], freq:'3x/wk', label:'Peak season' },
-        'NAS': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'POP': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-        'PUJ': { months:[11,12,1,2,3,4], freq:'3x/wk', label:'Winter' },
-        'SJD': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-        'SJO': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'SJU': { months:[11,12,1,2,3,4,5,6,7,8], freq:'daily', label:'Most of year' },
-        'STT': { months:[11,12,1,2,3,4], freq:'2x/wk', label:'Winter' },
-        'STX': { months:[11,12,1,2,3,4], freq:'1x/wk', label:'Winter' },
-    }
-};
-
-function hasDirectRoute(originCode, destCode) {
-    const hub = ROUTES[originCode];
-    if (!hub) return null;
-    return hub.routes.includes(destCode);
-}
-function getSeasonalInfo(originCode, destCode) {
-    const hubSeasonal = SEASONAL[originCode];
-    if (!hubSeasonal) return null;
-    return hubSeasonal[destCode] || null;
-}
-function isSeasonalRoute(originCode, destCode) { return !!getSeasonalInfo(originCode, destCode); }
-function isRouteInactive(originCode, destCode, month) {
-    const info = getSeasonalInfo(originCode, destCode);
-    if (!info) return false;
-    return !info.months.includes(month);
+    updateCountdownDisplay();
+  }, 100);
+  timers.push(cdTimer);
 }
 
-// ===== BLACKOUT DATES =====
-function buildBlackoutSet() {
-    const dates = [];
-    function addRange(year, month, from, to) {
-        for (let d = from; d <= to; d++) dates.push(`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`);
-    }
-    function addDates(year, month, ...days) {
-        days.forEach(d => dates.push(`${year}-${String(month).padStart(2,'0')}-${String(d).padStart(2,'0')}`));
-    }
-    addDates(2026,1, 1,3,4,15,16,19);
-    addDates(2026,2, 12,13,16);
-    addRange(2026,3, 13,15); addRange(2026,3, 20,22); addRange(2026,3, 27,29);
-    addRange(2026,4, 3,6); addRange(2026,4, 10,12);
-    addDates(2026,5, 21,22,25);
-    addRange(2026,6, 25,28);
-    addRange(2026,7, 2,6);
-    addDates(2026,9, 3,4,7);
-    addDates(2026,10, 8,9,11,12);
-    addDates(2026,11, 24,25,28,29,30);
-    addRange(2026,12, 19,24); addRange(2026,12, 26,31);
-    addRange(2027,1, 1,3); addDates(2027,1, 14,15,18);
-    addDates(2027,2, 11,12,15);
-    addRange(2027,3, 12,14); addRange(2027,3, 19,21); addRange(2027,3, 26,29);
-    addRange(2027,4, 2,4);
-    return new Set(dates);
-}
-const BLACKOUT = buildBlackoutSet();
-
-// ===== STATE =====
-let selectedOrigin = null;
-let filterScope = 'direct'; // 'direct' or 'all'
-let filterRegion = 'all';   // 'all', 'domestic', 'intl'
-let tripType = 'rt';
-let dateMode = 'exact'; // 'exact' or 'flex'
-let calOffset = 0; // which page of 4 months
-const CAL_PAGE_SIZE = 4;
-const CAL_TOTAL_MONTHS = 14;
-
-function setTripType(type) {
-    tripType = type;
-    document.getElementById('togRT').classList.toggle('on', type === 'rt');
-    document.getElementById('togOW').classList.toggle('on', type === 'ow');
-    document.getElementById('returnGroup').style.display = type === 'rt' ? '' : 'none';
+function updateCountdownDisplay() {
+  var num = document.getElementById('s3Num');
+  var arc = document.getElementById('s3Arc');
+  if (num) num.textContent = cdVal.toFixed(1);
+  var pct = (10 - cdVal) / 10;
+  if (arc) arc.style.strokeDashoffset = (251 * (1 - pct)).toString();
 }
 
-function setDateMode(mode) {
-    dateMode = mode;
-    trackEvent('set_date_mode', { mode: mode });
-    document.getElementById('togExact').classList.toggle('on', mode === 'exact');
-    document.getElementById('togFlex').classList.toggle('on', mode === 'flex');
-    document.getElementById('dateFromGroup').style.display = mode === 'flex' ? 'none' : '';
-    document.getElementById('returnGroup').style.display = mode === 'flex' ? 'none' : (tripType === 'rt' ? '' : 'none');
+function cancelCountdown() {
+  if (cdTimer) { clearInterval(cdTimer); cdTimer = null; }
+  var watch = document.getElementById('watch');
+  if (watch) watch.classList.remove('shaking');
+  show('s5');
+  step(3, '<span class="cap-label cap-alert">SAFE</span> User confirmed they\u2019re okay \u2014 emergency alert cancelled');
+  later(function() {
+    resetToIdle();
+    step(0, '<span class="cap-label cap-info">COMPLETE</span> Cancel flow finished \u2014 tap Play to run it again');
+  }, 3000);
 }
 
-// ===== DATE HELPERS =====
-const MONTH_NAMES = ['January','February','March','April','May','June','July','August','September','October','November','December'];
-function fmt(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
-function isBlackout(dateStr) { return BLACKOUT.has(dateStr); }
-function addDays(d, n) { const r = new Date(d); r.setDate(r.getDate()+n); return r; }
-function datesBetween(from, to) {
-    const dates = []; let d = new Date(from); const end = new Date(to);
-    while (d <= end) { dates.push(fmt(d)); d = addDays(d, 1); }
-    return dates;
+/* === Reset === */
+function resetToIdle() {
+  monitoring = false;
+  demoRunning = false;
+  var btn = document.getElementById('s1Btn');
+  var circle = document.getElementById('s1Circle');
+  var st = document.getElementById('s1Status');
+  var sv = document.getElementById('s1Stat');
+  var accel = document.getElementById('s1Accel');
+  var watch = document.getElementById('watch');
+  var fill = document.getElementById('s2Fill');
+  var label = document.getElementById('s2Label');
+
+  if (btn) { btn.textContent = 'Start Monitoring'; btn.className = 's1-btn start'; }
+  if (circle) circle.classList.remove('on');
+  if (st) { st.textContent = 'Inactive'; st.className = 's1-status'; }
+  if (sv) { sv.textContent = 'Idle'; sv.className = 'val off'; }
+  if (accel) accel.textContent = '0.00 g';
+  if (watch) watch.classList.remove('shaking');
+  if (fill) fill.style.width = '0%';
+  if (label) label.textContent = 'Analyzing pattern...';
+  show('s1');
 }
 
-// ===== BUILD FRONTIER SEARCH URL =====
-function formatDateForFrontier(dateStr) {
-    if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-');
-    return encodeURIComponent(`${MONTH_NAMES[parseInt(month,10)-1]} ${parseInt(day,10)}, ${year}`);
-}
-function getFlexDate(dest) {
-    // Pick a smart default date within GoWild booking window
-    const today = new Date(); today.setHours(0,0,0,0);
-    const a = AIRPORTS.find(x => x.code === dest);
-    const isIntl = a && a.intl;
-    // Int'l: try ~7 days out (middle of 10-day window), Domestic: try tomorrow
-    const target = isIntl ? 7 : 1;
-    for (let i = target; i >= 0; i--) {
-        const ds = fmt(addDays(today, i));
-        if (!isBlackout(ds)) return ds;
-    }
-    // Fallback: search forward from today
-    for (let i = 0; i <= 14; i++) {
-        const ds = fmt(addDays(today, i));
-        if (!isBlackout(ds)) return ds;
-    }
-    return fmt(addDays(today, 1));
-}
-function buildBookingURL(origin, dest, date, returnDate) {
-    // Flexible mode: use a smart default date so Frontier shows its calendar
-    if (dateMode === 'flex' || !date) {
-        const flexDate = getFlexDate(dest);
-        const fmtFlex = formatDateForFrontier(flexDate);
-        return `https://booking.flyfrontier.com/Flight/InternalSelect?o1=${origin}&d1=${dest}&dd1=${fmtFlex}&ADT=1&r=false&mon=true&promo=&ftype=STD`;
-    }
-    const fmtDate = formatDateForFrontier(date);
-    if (tripType === 'rt' && returnDate) {
-        const fmtReturn = formatDateForFrontier(returnDate);
-        return `https://booking.flyfrontier.com/Flight/InternalSelect?o1=${origin}&d1=${dest}&dd1=${fmtDate}&o2=${dest}&d2=${origin}&dd2=${fmtReturn}&ADT=1&r=true&mon=true&promo=&ftype=STD`;
-    }
-    return `https://booking.flyfrontier.com/Flight/InternalSelect?o1=${origin}&d1=${dest}&dd1=${fmtDate}&ADT=1&r=false&mon=true&promo=&ftype=STD`;
+function reset() {
+  killAllTimers();
+  resetToIdle();
+  step(0, '<span class="cap-label cap-info">READY</span> Tap "Play Full Demo" to watch SeizureGuard in action');
 }
 
-// ===== AIRPORT SEARCH/DROPDOWN =====
-const originInput = document.getElementById('origin');
-const dropdown = document.getElementById('dropdown');
+/* === Demo Flows === */
+function playFull() {
+  reset();
+  demoRunning = true;
+  step(0, '<span class="cap-label cap-sense">SENSORS</span> Activating CoreMotion accelerometer at 50 Hz...');
 
-function renderDropdown(airports) {
-    dropdown.innerHTML = airports.map(a =>
-        `<div class="ao" onclick="selectAirport('${a.code}')">
-            <span><span class="c">${a.code}</span> &mdash; ${a.name}</span>
-            <span style="font-size:11px;color:var(--muted)">${a.region}</span>
-        </div>`
-    ).join('');
-    dropdown.classList.toggle('show', airports.length > 0);
-}
-originInput.addEventListener('input', () => {
-    const q = originInput.value.toLowerCase().trim();
-    if (!q) { dropdown.classList.remove('show'); return; }
-    renderDropdown(AIRPORTS.filter(a => a.code.toLowerCase().includes(q) || a.name.toLowerCase().includes(q) || a.region.toLowerCase().includes(q)).slice(0, 15));
-});
-originInput.addEventListener('focus', () => {
-    if (originInput.value.trim()) originInput.dispatchEvent(new Event('input'));
-    else renderDropdown(AIRPORTS.slice(0, 15));
-});
-document.addEventListener('click', e => { if (!e.target.closest('.aw')) dropdown.classList.remove('show'); });
+  later(function() {
+    if (!demoRunning) return;
+    toggleMonitor();
+    step(0, '<span class="cap-label cap-sense">MONITORING</span> Wrist motion streaming live \u2014 watching for seizure patterns');
+  }, 900);
 
-function selectAirport(code) {
-    const a = AIRPORTS.find(x => x.code === code);
-    selectedOrigin = a;
-    originInput.value = `${a.code} — ${a.name}, ${a.region}`;
-    dropdown.classList.remove('show');
-    trackEvent('select_origin', { airport: code, region: a.region });
-    if (document.querySelector('.book-now')) renderBookNow();
-}
+  later(function() {
+    if (!demoRunning) return;
+    step(1, '<span class="cap-label cap-detect">DETECTION</span> Abnormal motion spike detected \u2014 analyzing movement pattern...');
+    var watch = document.getElementById('watch');
+    if (watch) watch.classList.add('shaking');
+    show('s2');
 
-// ===== DATE SETUP =====
-const dateFromEl = document.getElementById('dateFrom');
-const dateToEl = document.getElementById('dateTo');
-function initDates() { dateFromEl.min = fmt(new Date()); dateToEl.min = fmt(new Date()); }
-initDates();
-selectAirport('ATL');
+    var pct = 0;
+    fillTimer = setInterval(function() {
+      pct += 2;
+      var fill = document.getElementById('s2Fill');
+      var label = document.getElementById('s2Label');
+      if (fill) fill.style.width = pct + '%';
+      if (label) {
+        if (pct < 35) label.textContent = 'Analyzing pattern...';
+        else if (pct < 65) label.textContent = 'Sustained motion detected';
+        else label.textContent = 'Threshold exceeded \u2014 triggering alert';
+      }
+      if (pct >= 100) { clearInterval(fillTimer); fillTimer = null; }
+    }, 100);
+    timers.push(fillTimer);
+  }, 3500);
 
-// ===== BLACKOUT CHECK =====
-function checkBlackouts() {
-    const from = dateFromEl.value, to = dateToEl.value;
-    if (!from || !to) return;
-    const boDates = datesBetween(from, to).filter(d => isBlackout(d));
-    const warnEl = document.getElementById('blackoutWarn');
-    if (boDates.length > 0) {
-        const formatted = boDates.map(d => new Date(d+'T12:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'})).join(', ');
-        warnEl.innerHTML = `FYI — ${formatted} ${boDates.length>1?'are':'is a'} blackout date${boDates.length>1?'s':''} in your range (other days are fine).`;
-        warnEl.style.display = 'block';
-    } else { warnEl.style.display = 'none'; }
-}
-dateFromEl.addEventListener('change', () => { checkBlackouts(); renderCalendars(); });
-dateToEl.addEventListener('change', () => { checkBlackouts(); renderCalendars(); });
-
-// ===== SHOW RESULTS =====
-function showResults() {
-    if (!selectedOrigin) { originInput.focus(); originInput.style.borderColor='var(--danger)'; setTimeout(()=>originInput.style.borderColor='',1500); return; }
-    trackEvent('find_flights', { origin: selectedOrigin.code, date_mode: dateMode, trip_type: tripType });
-    checkBlackouts();
-    const destinations = AIRPORTS.filter(a => a.code !== selectedOrigin.code);
-    const hasRouteData = !!ROUTES[selectedOrigin.code];
-    const from = dateMode === 'flex' ? '' : dateFromEl.value;
-    const to = dateMode === 'flex' ? '' : dateToEl.value;
-    const departMonth = from ? parseInt(from.split('-')[1], 10) : new Date().getMonth() + 1;
-    let activeDests = hasRouteData ? destinations.filter(a => {
-        if (!hasDirectRoute(selectedOrigin.code, a.code)) return true;
-        return !isRouteInactive(selectedOrigin.code, a.code, departMonth);
-    }) : destinations;
-    const directDests = hasRouteData ? activeDests.filter(a => hasDirectRoute(selectedOrigin.code, a.code)) : activeDests;
-    const domestic = directDests.filter(a => !a.intl);
-    const international = directDests.filter(a => a.intl);
-    const dates = (from && to) ? datesBetween(from, to) : [];
-    const validDates = dates.filter(d => !isBlackout(d));
-    const contentEl = document.getElementById('content');
-    const routeNote = hasRouteData
-        ? `Showing <b>${directDests.length} nonstop routes</b> from ${selectedOrigin.code}` + (departMonth ? ` active in ${MONTH_NAMES[departMonth-1]}` : '') + `. Inactive seasonal routes are hidden.`
-        : `Showing all Frontier airports. Route data isn't available for ${selectedOrigin.code}.`;
-
-    contentEl.innerHTML = `
-        <div class="stats">
-            <div class="stat"><div class="num">${directDests.length}</div><div class="lbl">${hasRouteData ? 'Direct Routes' : 'Destinations'}</div></div>
-            <div class="stat"><div class="num">${domestic.length}</div><div class="lbl">Domestic</div></div>
-            <div class="stat"><div class="num">${international.length}</div><div class="lbl">International</div></div>
-            ${dateMode==='exact'?`<div class="stat"><div class="num">${validDates.length}</div><div class="lbl">Searchable Days</div></div>`:`<div class="stat"><div class="num" style="color:var(--indigo)">&#8734;</div><div class="lbl">Flexible Dates</div></div>`}
-        </div>
-        <div style="margin-bottom:6px">
-            <div class="section-title">Destinations from ${selectedOrigin.code}</div>
-            <div class="section-sub">${routeNote}${dateMode==='exact'?' <span style="color:#92400e">Note: Frontier may show connections if no nonstop flies on your exact date.</span>':' <span style="color:var(--green);font-weight:500">Flexible mode — cards open Frontier\'s fare calendar so you can pick available dates.</span>'}</div>
-        </div>
-        <div class="filter-bar" id="filterBar">
-            ${hasRouteData ? `<span class="filter-group"><div class="filter-chip on" data-scope="direct" onclick="setScope('direct')">Direct Nonstop (${directDests.length})</div><div class="filter-chip" data-scope="all" onclick="setScope('all')">All Airports</div></span>` : ''}
-            <span class="filter-sep"></span>
-            <span class="filter-group"><div class="filter-chip on" data-region="all" onclick="setRegion('all')">All</div><div class="filter-chip" data-region="domestic" onclick="setRegion('domestic')">Domestic (${domestic.length})</div><div class="filter-chip" data-region="intl" onclick="setRegion('intl')">Int'l (${international.length})</div></span>
-        </div>
-        <div id="destGrid"></div>
-    `;
-    filterScope = hasRouteData ? 'direct' : 'all';
-    filterRegion = 'all';
-    renderCards(destinations);
-}
-
-function setScope(s) {
-    filterScope = s;
-    trackEvent('filter_scope', { scope: s });
-    document.querySelectorAll('[data-scope]').forEach(c => c.classList.toggle('on', c.dataset.scope === s));
-    renderCards(AIRPORTS.filter(a => a.code !== selectedOrigin.code));
-}
-function setRegion(r) {
-    filterRegion = r;
-    trackEvent('filter_region', { region: r });
-    document.querySelectorAll('[data-region]').forEach(c => c.classList.toggle('on', c.dataset.region === r));
-    renderCards(AIRPORTS.filter(a => a.code !== selectedOrigin.code));
-}
-
-function renderCards(destinations) {
-    const hasRouteData = !!ROUTES[selectedOrigin.code];
-    let filtered = [...destinations];
-
-    // Apply region filter
-    if (filterRegion === 'domestic') filtered = filtered.filter(a => !a.intl);
-    else if (filterRegion === 'intl') filtered = filtered.filter(a => a.intl);
-
-    const date = dateMode === 'flex' ? '' : dateFromEl.value;
-    const retDate = dateMode === 'flex' ? '' : dateToEl.value;
-    const departMonth = date ? parseInt(date.split('-')[1], 10) : new Date().getMonth() + 1;
-    const gridEl = document.getElementById('destGrid');
-    if (hasRouteData) filtered = filtered.filter(a => !isRouteInactive(selectedOrigin.code, a.code, departMonth));
-
-    // Apply scope filter
-    let directRoutes, otherRoutes;
-    if (hasRouteData && filterScope === 'all') {
-        directRoutes = filtered.filter(a => hasDirectRoute(selectedOrigin.code, a.code));
-        otherRoutes = filtered.filter(a => !hasDirectRoute(selectedOrigin.code, a.code));
-    } else if (hasRouteData && filterScope === 'direct') {
-        directRoutes = filtered.filter(a => hasDirectRoute(selectedOrigin.code, a.code));
-        otherRoutes = [];
-    } else { directRoutes = filtered; otherRoutes = []; }
-    // Sort: daily/frequent routes first, 1x/wk routes last
-    directRoutes.sort((a, b) => {
-        const aInfo = getSeasonalInfo(selectedOrigin.code, a.code);
-        const bInfo = getSeasonalInfo(selectedOrigin.code, b.code);
-        const aLow = aInfo && aInfo.freq === '1x/wk' ? 1 : 0;
-        const bLow = bInfo && bInfo.freq === '1x/wk' ? 1 : 0;
-        if (aLow !== bLow) return aLow - bLow;
-        return a.code.localeCompare(b.code);
+  later(function() {
+    if (!demoRunning) return;
+    show('s3');
+    step(2, '<span class="cap-label cap-count">COUNTDOWN</span> Seizure confirmed \u2014 10 seconds to tap "I\u2019M OK" before alerting contacts');
+    startCountdown(function() {
+      var watch = document.getElementById('watch');
+      if (watch) watch.classList.remove('shaking');
+      show('s4');
+      step(3, '<span class="cap-label cap-alert">ALERT SENT</span> Emergency SMS + notification dispatched to your contacts');
+      if (accelTimer) { clearInterval(accelTimer); accelTimer = null; }
+      later(function() {
+        resetToIdle();
+        step(0, '<span class="cap-label cap-info">COMPLETE</span> Full alert flow finished \u2014 tap Play to run it again');
+      }, 5000);
     });
-
-    function cardHTML(a, isDirect) {
-        const sInfo = getSeasonalInfo(selectedOrigin.code, a.code);
-        const isLowFreq = sInfo && (sInfo.freq === '1x/wk');
-        const useFlex = dateMode === 'flex' && isDirect;
-
-        if (!isDirect) {
-            // Non-direct: clickable link to Frontier (will show connecting flights), clearly labeled
-            const connHref = buildBookingURL(selectedOrigin.code,a.code,date,retDate);
-            return `
-            <a class="card connecting" href="${connHref}" target="_blank" rel="noopener" data-code="${a.code}" onclick="trackEvent('click_connecting',{destination:'${a.code}',origin:'${selectedOrigin.code}'})">
-                ${a.intl?'<div class="intl-badge">Int\'l</div>':''}
-                <div class="connecting-badge">Connecting</div>
-                <div class="code">${a.code}</div>
-                <div class="name">${a.name}</div>
-                <div class="region">${a.region}</div>
-                <div class="connecting-note">&#128268; No nonstop from ${selectedOrigin.code} — will show connecting flights</div>
-                <div class="hint">Search connections &#8599;</div>
-            </a>`;
-        }
-
-        const cardClass = isLowFreq ? ' low-freq' : '';
-        const href = useFlex ? '#' : buildBookingURL(selectedOrigin.code,a.code,date,retDate);
-        const click = useFlex ? `onclick="event.preventDefault();openFlexModal('${a.code}')"` : `onclick="trackEvent('click_destination',{destination:'${a.code}',origin:'${selectedOrigin.code}',mode:'exact',international:${!!a.intl}})"`;
-        const target = !useFlex ? 'target="_blank" rel="noopener"' : '';
-        return `
-        <a class="card${cardClass}" href="${href}" ${target} data-code="${a.code}" ${click}>
-            ${a.intl?'<div class="intl-badge">Int\'l</div>':''}
-            ${sInfo?`<div class="seasonal-badge">${sInfo.label}</div>`:''}
-            <div class="code">${a.code}</div>
-            <div class="name">${a.name}</div>
-            <div class="region">${a.region}</div>
-            ${isLowFreq&&sInfo.days?`<div class="low-freq-warn">&#9992; Flies ${sInfo.days.map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', ')} only</div>`:''}
-            ${isLowFreq&&!sInfo.days?`<div class="low-freq-warn">&#9888; Flies only 1 day/week — check available days</div>`:''}
-            ${sInfo&&!isLowFreq?`<div class="freq-note">${sInfo.freq}${sInfo.days&&sInfo.days.length<7?' — '+sInfo.days.map(d=>['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d]).join(', '):(!sInfo.days?' — not every day':'')}</div>`:''}
-            ${!sInfo&&a.intl?'<div class="freq-note">Int\'l — schedule may vary</div>':''}
-            <div class="hint">${useFlex?'Pick a date to try':'Search on Frontier'} &#8599;</div>
-        </a>`;
-    }
-
-    let html = '';
-    if (directRoutes.length > 0) {
-        if (otherRoutes.length > 0) html += `<div class="route-section-label">&#9992; Direct Nonstop Routes <span class="count">(${directRoutes.length})</span></div>`;
-        html += '<div class="grid">' + directRoutes.map(a => cardHTML(a, true)).join('') + '</div>';
-    }
-    if (otherRoutes.length > 0) {
-        html += '<hr class="no-route-divider">';
-        html += `<div class="route-section-label" style="color:var(--indigo)">&#128268; Connecting Flights <span class="count">(${otherRoutes.length})</span><span style="font-weight:400;font-size:11px;color:var(--muted);margin-left:8px">These require a layover — no nonstop from ${selectedOrigin.code}</span></div>`;
-        html += '<div class="grid">' + otherRoutes.map(a => cardHTML(a, false)).join('') + '</div>';
-    }
-    if (!directRoutes.length && !otherRoutes.length) html = '<div class="empty-state"><div class="icon">&#128269;</div><h3>No matches</h3><p>Try a different filter.</p></div>';
-    gridEl.innerHTML = html;
+  }, 9000);
 }
 
-// ===== CALENDAR CAROUSEL =====
-function shiftCal(dir) {
-    calOffset = Math.max(0, Math.min(calOffset + dir, CAL_TOTAL_MONTHS - CAL_PAGE_SIZE));
-    renderCalendars();
+function playCancel() {
+  reset();
+  demoRunning = true;
+  step(0, '<span class="cap-label cap-sense">SENSORS</span> Activating CoreMotion accelerometer at 50 Hz...');
+
+  later(function() {
+    if (!demoRunning) return;
+    toggleMonitor();
+    step(0, '<span class="cap-label cap-sense">MONITORING</span> Wrist motion streaming live \u2014 watching for seizure patterns');
+  }, 900);
+
+  later(function() {
+    if (!demoRunning) return;
+    step(1, '<span class="cap-label cap-detect">DETECTION</span> Abnormal motion spike detected \u2014 analyzing...');
+    var watch = document.getElementById('watch');
+    if (watch) watch.classList.add('shaking');
+    show('s2');
+
+    var pct = 0;
+    fillTimer = setInterval(function() {
+      pct += 3;
+      var fill = document.getElementById('s2Fill');
+      if (fill) fill.style.width = Math.min(pct, 100) + '%';
+      if (pct >= 100) { clearInterval(fillTimer); fillTimer = null; }
+    }, 80);
+    timers.push(fillTimer);
+  }, 3200);
+
+  later(function() {
+    if (!demoRunning) return;
+    show('s3');
+    step(2, '<span class="cap-label cap-count">COUNTDOWN</span> Seizure confirmed \u2014 user will tap "I\u2019M OK" to cancel...');
+    startCountdown(function() {});
+  }, 7000);
+
+  later(function() {
+    if (!demoRunning) return;
+    cancelCountdown();
+  }, 11000);
 }
-
-function renderCalendars() {
-    const container = document.getElementById('cals');
-    const now = new Date();
-    const todayYear = now.getFullYear(), todayMonth = now.getMonth(), todayDate = now.getDate();
-    const todayStr = fmt(now);
-    let html = '';
-
-    for (let m = calOffset; m < calOffset + CAL_PAGE_SIZE && m < CAL_TOTAL_MONTHS; m++) {
-        const month = (todayMonth + m) % 12;
-        const year = todayYear + Math.floor((todayMonth + m) / 12);
-        const monthLabel = MONTH_NAMES[month] + ' ' + year;
-        const firstDay = new Date(year, month, 1).getDay();
-        const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-        let calHtml = `<div class="cal"><h3>${monthLabel}</h3><div class="cal-grid">`;
-        ['Su','Mo','Tu','We','Th','Fr','Sa'].forEach(d => calHtml += `<div class="cal-hd">${d}</div>`);
-        for (let i = 0; i < firstDay; i++) calHtml += '<div class="cal-d empty"></div>';
-
-        for (let d = 1; d <= daysInMonth; d++) {
-            const mm = String(month+1).padStart(2,'0'), dd = String(d).padStart(2,'0');
-            const dateStr = `${year}-${mm}-${dd}`;
-            const isPast = (year<todayYear)||(year===todayYear&&month<todayMonth)||(year===todayYear&&month===todayMonth&&d<todayDate);
-            let cls = 'cal-d';
-            if (isPast) cls += ' past';
-            else if (isBlackout(dateStr)) cls += ' bo';
-            if (dateStr === todayStr) cls += ' today';
-            const from = dateFromEl.value, to = dateToEl.value;
-            if (from && to && dateStr >= from && dateStr <= to && !isPast) cls += ' in-range';
-            if (dateStr === from || dateStr === to) cls += ' sel';
-            calHtml += `<div class="${cls}" data-date="${dateStr}" onclick="calClick('${dateStr}')">${d}</div>`;
-        }
-        calHtml += '</div></div>';
-        html += calHtml;
-    }
-    container.innerHTML = html;
-
-    // Update nav buttons
-    document.getElementById('calPrev').disabled = calOffset === 0;
-    document.getElementById('calNext').disabled = calOffset >= CAL_TOTAL_MONTHS - CAL_PAGE_SIZE;
-    const startMonth = (todayMonth + calOffset) % 12;
-    const endIdx = Math.min(calOffset + CAL_PAGE_SIZE - 1, CAL_TOTAL_MONTHS - 1);
-    const endMonth = (todayMonth + endIdx) % 12;
-    document.getElementById('calPage').textContent = `${calOffset/CAL_PAGE_SIZE + 1}/${Math.ceil(CAL_TOTAL_MONTHS/CAL_PAGE_SIZE)}`;
-}
-
-function calClick(dateStr) {
-    const d = new Date(dateStr + 'T12:00:00');
-    const today = new Date(); today.setHours(0,0,0,0);
-    if (d < today || isBlackout(dateStr)) return;
-    if (!dateFromEl.value || (dateFromEl.value && dateToEl.value) || dateStr < dateFromEl.value) {
-        dateFromEl.value = dateStr; dateToEl.value = '';
-    } else { dateToEl.value = dateStr; }
-    checkBlackouts();
-    renderCalendars();
-}
-
-renderCalendars();
-
-// ===== FLEX DATE POPUP =====
-function openFlexModal(destCode) {
-    const a = AIRPORTS.find(x => x.code === destCode);
-    if (!a) return;
-    trackEvent('open_flex_modal', { destination: destCode, origin: selectedOrigin ? selectedOrigin.code : 'ATL', international: !!a.intl });
-    const origin = selectedOrigin ? selectedOrigin.code : 'ATL';
-    const sInfo = getSeasonalInfo(origin, destCode);
-    const isLow = sInfo && (sInfo.freq === '1x/wk');
-    const isIntl = !!a.intl;
-    const knownDays = sInfo && sInfo.days ? sInfo.days : null; // e.g. [6] for Saturday only
-
-    const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
-    const shortDay = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
-
-    // Build date pool within GoWild booking window
-    const today = new Date(); today.setHours(0,0,0,0);
-    const maxDays = isIntl ? 10 : 1;
-    const dateCandidates = [];
-    for (let i = 0; i <= maxDays; i++) {
-        const d = addDays(today, i);
-        const ds = fmt(d);
-        const bo = isBlackout(ds);
-        const dow = d.getDay(); // 0=Sun ... 6=Sat
-        const noFlight = knownDays && !knownDays.includes(dow);
-        dateCandidates.push({ date: ds, dateObj: d, blackout: bo, noFlight: noFlight, dow: dow });
-    }
-
-    // Separate: flyable dates vs non-flyable
-    const flyableDates = dateCandidates.filter(c => !c.noFlight && !c.blackout);
-    const hasKnownSchedule = !!knownDays;
-
-    function buildURL(dateStr) {
-        const f = formatDateForFrontier(dateStr);
-        return `https://booking.flyfrontier.com/Flight/InternalSelect?o1=${origin}&d1=${destCode}&dd1=${f}&ADT=1&r=false&mon=true&promo=&ftype=STD`;
-    }
-
-    let html = `<button class="modal-close" onclick="closeFlexModal()">&times;</button>`;
-    html += `<div class="m-dest">${a.code}</div>`;
-    html += `<div class="m-name">${a.name}</div>`;
-    html += `<div class="m-region">${a.region}${isIntl ? ' &middot; International' : ''}</div>`;
-    if (sInfo) html += `<div class="m-freq">${sInfo.label} &middot; ${sInfo.freq}</div>`;
-    else if (isIntl) html += `<div class="m-freq">Int'l &middot; schedule may vary</div>`;
-
-    if (hasKnownSchedule) {
-        const dayLabels = knownDays.map(d => dayNames[d]).join(', ');
-        html += `<div class="m-sub">&#9992; This route flies on <b>${dayLabels}</b>.${flyableDates.length > 0 ? ' Only matching dates in your GoWild window are shown below.' : ''}</div>`;
-    } else if (sInfo && sInfo.freq) {
-        html += `<div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px;color:#7a5000">&#9888; <b>This route only flies ${sInfo.freq}</b> — most dates below will NOT have a flight. You may need to try several dates. Look for Frontier\'s "Low Fare Calendar" on the booking page to see which days actually have flights.</div>`;
-    } else if (isLow) {
-        html += `<div style="background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:8px;padding:10px 14px;margin:8px 0;font-size:13px;color:#7a5000">&#9888; <b>Limited flights on this route.</b> Not all dates below will have a flight. Try the "Low Fare Calendar" on Frontier\'s page to see actual flight days.</div>`;
-    } else {
-        html += `<div class="m-sub">Pick a date to check on Frontier. ${isIntl ? 'GoWild int\'l flights can be booked up to 10 days ahead.' : 'GoWild domestic flights open 1 day before departure.'}</div>`;
-    }
-
-    if (hasKnownSchedule && flyableDates.length === 0) {
-        // No flight days fall within the booking window
-        const nextFlyDay = knownDays.map(dow => {
-            let d = new Date(today);
-            while (d.getDay() !== dow) d = addDays(d, 1);
-            return d;
-        }).sort((a, b) => a - b)[0];
-        const nextStr = nextFlyDay.toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
-        html += `<div style="text-align:center;padding:20px 0;color:var(--muted)">
-            <div style="font-size:28px;margin-bottom:8px">&#128198;</div>
-            <div style="font-size:14px;font-weight:600;color:var(--text);margin-bottom:4px">No flight days in your booking window</div>
-            <div style="font-size:12px">The next flight day is <b>${nextStr}</b>. Check back when it falls within your GoWild window${isIntl ? ' (10 days ahead)' : ' (1 day ahead)'}.</div>
-        </div>`;
-    } else {
-        html += `<div class="m-label">${hasKnownSchedule ? 'Flight days in your window' : 'Available dates to try'}</div>`;
-        html += `<div class="date-grid">`;
-
-        const datesToShow = hasKnownSchedule ? dateCandidates.filter(c => !c.noFlight) : dateCandidates;
-        datesToShow.forEach(c => {
-            const dayOfWeek = shortDay[c.dow];
-            const dateLabel = c.dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            if (c.blackout) {
-                html += `<div class="date-btn db-bo"><span class="db-day">${dayOfWeek}</span><span class="db-date">${dateLabel}</span><span class="db-arrow">Blackout</span></div>`;
-            } else {
-                html += `<a class="date-btn" href="${buildURL(c.date)}" target="_blank" rel="noopener" onclick="trackEvent('click_flex_date',{destination:'${destCode}',date:'${c.date}',day:'${dayOfWeek}'})"><span class="db-day">${dayOfWeek}</span><span class="db-date">${dateLabel}</span><span class="db-arrow">${hasKnownSchedule ? 'Check availability' : 'Try this date'} &#8599;</span></a>`;
-            }
-        });
-        html += `</div>`;
-    }
-
-    if (hasKnownSchedule) {
-        html += `<div class="m-tip">&#128161; These are scheduled flight days, but <b>GoWild seat availability is not guaranteed</b>. If Frontier shows "unavailable," it may mean GoWild seats are sold out or the schedule has changed. Try another date!</div>`;
-    } else {
-        html += `<div class="m-tip">&#128161; Tip: If a date says "no flights available," come back and try the next one.</div>`;
-    }
-
-    document.getElementById('flexModalContent').innerHTML = html;
-    document.getElementById('flexModal').classList.add('show');
-    document.body.style.overflow = 'hidden';
-}
-function closeFlexModal() {
-    document.getElementById('flexModal').classList.remove('show');
-    document.body.style.overflow = '';
-}
-// ===== BOOK NOW BANNER =====
-function getNextNonBlackout(start, maxSearch) {
-    let d = new Date(start);
-    for (let i = 0; i < maxSearch; i++) {
-        const ds = fmt(d);
-        if (!isBlackout(ds)) return ds;
-        d = addDays(d, 1);
-    }
-    return fmt(start);
-}
-function getUpcomingDates(start, count, maxSearch) {
-    const dates = []; let d = new Date(start);
-    for (let i = 0; i < maxSearch && dates.length < count; i++) {
-        const ds = fmt(d);
-        if (!isBlackout(ds)) dates.push(ds);
-        d = addDays(d, 1);
-    }
-    return dates;
-}
-function fmtShort(dateStr) {
-    return new Date(dateStr + 'T12:00:00').toLocaleDateString('en-US', {weekday:'short', month:'short', day:'numeric'});
-}
-
-function renderBookNow() {
-    if (!selectedOrigin) return;
-    const el = document.getElementById('content');
-    const code = selectedOrigin.code;
-    const hasData = !!ROUTES[code];
-    if (!hasData) {
-        el.innerHTML = `<div class="empty-state"><div class="icon">&#127758;</div><h3>Pick your dates and hit Find Flights</h3><p>Route data for ${code} isn't available — you can still search all Frontier airports.</p></div>`;
-        return;
-    }
-    const today = new Date(); today.setHours(0,0,0,0);
-
-    // GoWild booking windows:
-    // Domestic: opens 1 day before departure → bookable: today & tomorrow
-    // Int'l: opens 10 days before departure → bookable: today through today+10
-    const domDates = [];
-    for (let i = 0; i <= 1; i++) {
-        const ds = fmt(addDays(today, i));
-        if (!isBlackout(ds)) domDates.push(ds);
-    }
-    // Fallback: if today & tomorrow are both blackouts, find next available
-    if (domDates.length === 0) {
-        const fb = getNextNonBlackout(addDays(today, 2), 14);
-        if (fb) domDates.push(fb);
-    }
-
-    const intlDates = [];
-    for (let i = 0; i <= 10; i++) {
-        const ds = fmt(addDays(today, i));
-        if (!isBlackout(ds)) intlDates.push(ds);
-    }
-
-    // Check which months the date pools span (for seasonal filtering)
-    const intlMonths = [...new Set(intlDates.map(d => parseInt(d.split('-')[1], 10)))];
-    const domMonths = [...new Set(domDates.map(d => parseInt(d.split('-')[1], 10)))];
-
-    const routes = ROUTES[code].routes;
-    const intlRoutes = routes.map(c => AIRPORTS.find(a => a.code === c)).filter(a => a && a.intl)
-        .filter(a => intlMonths.some(m => !isRouteInactive(code, a.code, m)))
-        .sort((a, b) => {
-            const aI = getSeasonalInfo(code, a.code), bI = getSeasonalInfo(code, b.code);
-            const aL = aI && aI.freq === '1x/wk' ? 1 : 0, bL = bI && bI.freq === '1x/wk' ? 1 : 0;
-            return aL - bL || a.code.localeCompare(b.code);
-        });
-    const domRoutes = routes.map(c => AIRPORTS.find(a => a.code === c)).filter(a => a && !a.intl)
-        .filter(a => domMonths.some(m => !isRouteInactive(code, a.code, m)))
-        .sort(() => Math.random() - 0.5);
-
-    // Build a browse URL with a smart default date so Frontier shows its calendar
-    function buildBrowseURL(dest) {
-        const flexDate = getFlexDate(dest);
-        const fmtFlex = formatDateForFrontier(flexDate);
-        return `https://booking.flyfrontier.com/Flight/InternalSelect?o1=${code}&d1=${dest}&dd1=${fmtFlex}&ADT=1&r=false&mon=true&promo=&ftype=STD`;
-    }
-
-    function sugCard(a) {
-        const sI = getSeasonalInfo(code, a.code);
-        const isLow = sI && sI.freq === '1x/wk';
-        return `<a class="sug-card${isLow?' sc-low':''}" href="#" onclick="event.preventDefault();trackEvent('click_book_now',{destination:'${a.code}'});openFlexModal('${a.code}')">
-            ${a.intl?'<div class="sc-intl">Int\'l</div>':''}
-            <div class="sc-code">${a.code}</div>
-            <div class="sc-name">${a.name}</div>
-            <div class="sc-region">${a.region}</div>
-            <div class="sc-date">Pick a date &rarr;</div>
-            ${isLow ? '<div class="sc-freq">1x/wk — limited days</div>' : ''}
-            ${sI && !isLow ? `<div class="sc-freq">${sI.freq}</div>` : ''}
-        </a>`;
-    }
-
-    let h = `<div class="book-now">
-        <h2>&#128293; Book Now from ${code}</h2>
-        <div class="bn-sub">Routes available with GoWild right now. Tap a card to browse available dates on Frontier. Remember to select the <b>GoWild</b> tab!</div>`;
-
-    if (intlRoutes.length > 0) {
-        const rangeLabel = intlDates.length > 1
-            ? `${fmtShort(intlDates[0])} – ${fmtShort(intlDates[intlDates.length-1])}`
-            : intlDates.length ? fmtShort(intlDates[0]) : 'blackout period';
-        h += `<div class="bn-label">&#9992; International <span class="bn-count">(${intlRoutes.length} routes)</span><span class="bn-date">GoWild window: ${rangeLabel}</span></div>`;
-        h += `<div class="bn-scroll">${intlRoutes.map(a => sugCard(a)).join('')}</div>`;
-    }
-
-    if (domRoutes.length > 0) {
-        const domLabel = domDates.length > 1
-            ? `${fmtShort(domDates[0])} – ${fmtShort(domDates[domDates.length-1])}`
-            : domDates.length ? fmtShort(domDates[0]) : 'blackout period';
-        h += `<div class="bn-label">&#9992; Domestic <span class="bn-count">(${domRoutes.length} routes)</span><span class="bn-date">GoWild window: ${domLabel}</span></div>`;
-        h += `<div class="bn-scroll">${domRoutes.map(a => sugCard(a)).join('')}</div>`;
-    }
-
-    h += `<div class="bn-footer">Or pick specific dates above and hit <b>Find Flights</b> for deep links</div>`;
-    h += '</div>';
-    el.innerHTML = h;
-}
-
-renderBookNow();
-
-document.addEventListener('keydown', e => {
-    if (e.key === 'Enter' && document.activeElement.closest('.search-bar')) showResults();
-    if (e.key === 'Escape') { dropdown.classList.remove('show'); closeFlexModal(); }
-});
-
-// ===== GOWILD HELP KNOWLEDGE BASE =====
-const HELP_KB = [
-    { q:'How do I book a GoWild flight?', a:'Log into your <b>FRONTIER Miles account</b> on flyfrontier.com or the app. Search for your flight, then look for the <b>GoWild! price ($0.01)</b> at the top of the fare options. Select it and complete booking. You must be logged in to see GoWild fares.', tags:'book booking how reserve flight purchase buy', cat:'Booking' },
-    { q:'When can I book domestic flights?', a:'Domestic GoWild flights open for booking <b>1 day before departure</b>. So you can book tomorrow\'s flight starting today. Seats are subject to availability — not every flight will have GoWild seats.', tags:'domestic book when window day before ahead time', cat:'Booking' },
-    { q:'When can I book international flights?', a:'International GoWild flights can be booked starting <b>10 days before departure</b>. This gives you a wider window to plan international trips. The 10-day window includes the departure date.', tags:'international book when window days ahead intl abroad', cat:'Booking' },
-    { q:'Can I book round-trip flights?', a:'Yes! You can book <b>round-trip GoWild flights</b>. Search as normal and both legs will show GoWild pricing if available. Both segments must fall within the booking windows (1 day for domestic, 10 days for international).', tags:'round trip roundtrip return both ways two way', cat:'Booking' },
-    { q:'Can I book early or in advance?', a:'GoWild has an <b>Early Booking</b> option that lets you book select flights outside the normal windows. An additional Early Booking charge may apply on top of the $0.01 fare. Check Frontier\'s site for current early booking fees.', tags:'early advance ahead plan future book before window', cat:'Booking' },
-    { q:'How much does a GoWild flight cost?', a:'Each flight costs just <b>$0.01 in airfare</b>, plus taxes, fees, and government charges. For domestic flights that\'s usually around <b>$7-15 total</b>. International flights have higher taxes — expect <b>$30-80+ total</b> depending on the destination.', tags:'cost price how much fare pay cheap penny cent taxes fees', cat:'Pricing' },
-    { q:'How much does the GoWild pass cost?', a:'The <b>2026-2027 Annual Pass</b> is $599 (intro pricing sometimes available at $349). There\'s also a <b>Monthly Pass</b> ($99 enrollment + monthly fee), <b>Summer Pass</b>, and <b>Fall/Winter Pass</b> options. Check flyfrontier.com/deals/gowild-pass for current pricing.', tags:'pass price cost annual monthly how much subscription', cat:'Pricing' },
-    { q:'Are bags included with GoWild?', a:'<b>No.</b> GoWild fares only include a <b>free personal item</b> (small bag that fits under the seat). Carry-on bags, checked bags, and overhead bin access cost extra. If you have Frontier <b>Elite Status</b>, those benefits do apply to GoWild flights.', tags:'bags baggage luggage carry on checked suitcase included free personal item', cat:'Extras' },
-    { q:'How much is a checked bag on Frontier?', a:'Frontier bag fees vary by when you buy. <b>Checked bag:</b> ~$35-55 online at booking, up to $70+ at the gate. <b>Carry-on bag:</b> ~$40-60 online, up to $75+ at the gate. <b>Personal item:</b> free (must fit under seat, 14x18x8 in). Always buy bags online or in the app — gate prices are much higher. Prices vary by route and season.', tags:'checked bag cost price how much carry on luggage fee baggage suitcase gate', cat:'Bags' },
-    { q:'Can I pick my seat with GoWild?', a:'<b>Seats cannot be reserved in advance</b> with a standard GoWild fare. You\'ll be assigned a seat at check-in. However, you can <b>purchase a seat assignment</b> separately — typically <b>$6-15 for standard seats</b> and <b>$15-50+ for stretch seats</b>. Elite Status benefits apply if you have them.', tags:'seat select choose pick assign reserve advance cost price', cat:'Extras' },
-    { q:'What are the blackout dates?', a:'GoWild has <b>extensive blackout dates</b> around major holidays and peak travel periods — typically around New Year\'s, MLK weekend, Presidents\' Day, spring break weeks, Memorial Day, July 4th, Labor Day, Columbus Day, Thanksgiving, and Christmas. <b>Dec 25 is NOT blacked out.</b> Check the calendar above for exact dates!', tags:'blackout dates when blocked holiday travel restricted unavailable', cat:'Blackouts' },
-    { q:'What happens if I miss my flight / no-show?', a:'<b>Cancel before departure</b> if you can\'t make it. Repeated no-shows can result in <b>financial penalties or pass revocation</b> without refund. Frontier takes no-shows seriously because empty GoWild seats could have gone to other travelers. Always cancel if plans change!', tags:'miss flight no show noshow skip cancel penalty consequence', cat:'Policies' },
-    { q:'Can I cancel or change a booked flight?', a:'Yes, but standard <b>change/cancel fees</b> may apply after the 24-hour free cancellation window. If you booked 7+ days before departure, you can get a full refund within 24 hours of booking. After that, cancellation fees apply and the fare is non-refundable. <b>You must cancel before departure time</b> — uncancelled flights count as no-shows.', tags:'cancel change modify rebook switch different flight refund', cat:'Policies' },
-    { q:'Can I cancel my GoWild pass?', a:'Your pass <b>auto-renews</b> unless you opt out. You can manage or cancel auto-renewal from your <b>FRONTIER Miles profile page</b>. The initial enrollment fee is non-refundable. Cancel before your renewal date to avoid being charged again.', tags:'cancel pass subscription renew auto renewal stop end unsubscribe', cat:'Pass' },
-    { q:'Who can use the GoWild pass?', a:'You must be a <b>U.S. resident</b> and a <b>FRONTIER Miles member</b> (free to join). The pass is <b>non-transferable</b> — only the passholder can fly. Kids under 13 must be enrolled by a parent/guardian, and kids under 10 must travel with someone 15+.', tags:'who eligible age kids children family transfer share use', cat:'Eligibility' },
-    { q:'How do I see GoWild fares on Frontier\'s site?', a:'You <b>must be logged in</b> to your FRONTIER Miles account. Search for a flight, and look at the fare options — the GoWild price should appear at the <b>top of the fare column</b> as a special $0.01 option. If you don\'t see it, make sure you\'re logged in and the flight is within the booking window.', tags:'see find gowild fare penny cent where look site website login', cat:'Booking' },
-    { q:'Can Frontier show connecting flights instead of nonstop?', a:'Yes! When you search on Frontier, if there\'s <b>no nonstop flight on your exact date</b>, their booking engine may show <b>connecting itineraries</b> instead. This is common for 1x/week routes. There\'s no URL parameter to force nonstop only — you\'ll need to check the results carefully.', tags:'connecting connection layover stop nonstop direct one stop', cat:'Routes' },
-    { q:'What\'s the difference between Exact and Flexible dates?', a:'<b>Exact dates</b> lets you pick specific travel dates and links you directly to Frontier\'s booking for those dates. <b>Flexible dates</b> opens a popup where you can pick from multiple dates within your GoWild booking window — great for routes that only fly certain days of the week.', tags:'exact flexible flex dates mode toggle difference', cat:'This Tool' },
-    { q:'Why does Frontier say "no flights available"?', a:'This usually means <b>no flight operates on that specific date</b>. Many international routes only fly 1-2 days per week (often Saturdays). Try <b>Flexible mode</b> in this tool — it shows you which days the route actually flies so you can pick the right date. It can also mean all GoWild seats are taken.', tags:'no flights available error unavailable why empty date wrong', cat:'Troubleshooting' },
-    { q:'Do I earn miles with GoWild?', a:'The $0.01 base fare doesn\'t earn meaningful miles toward status. However, you <b>do earn miles on purchases</b> like bag fees, seat assignments, and other add-ons. Your <b>Elite Status benefits</b> (if you have them) still apply to GoWild flights.', tags:'miles points earn status elite rewards', cat:'Miles & Status' },
-    { q:'What international destinations can I fly to?', a:'From <b>ATL</b>, Frontier flies nonstop to 15 international destinations. <b>Year-round:</b> San Juan (SJU) — daily, Cancun (CUN) — daily. <b>Winter season (Nov–Apr):</b> Punta Cana (PUJ) — daily, Montego Bay (MBJ) — Mon/Tue/Wed/Thu, Santo Domingo (SDQ) — ~2x/wk, Guatemala City (GUA) — ~2x/wk, San Salvador (SAL) — ~2x/wk, Nassau (NAS) — Sat, Turks & Caicos (PLS) — Sat, Puerto Vallarta (PVR) — Sat, San Pedro Sula (SAP) — Sat, San Jose CR (SJO) — Sat, Cabo (SJD) — Sat, St. Maarten (SXM) — 1-2x/wk. <b>Summer only (May–Aug):</b> Aruba (AUA) — Sat. Note: Liberia, Costa Rica (LIR) is Delta only from ATL — not available on Frontier. Use <b>Flexible mode</b> to see exact available dates.', tags:'international destinations where fly abroad caribbean mexico central america routes list all', cat:'Routes' },
-    { q:'Do I need a passport for international GoWild flights?', a:'<b>Yes</b> for most international destinations (Mexico, Caribbean, Central America). <b>No passport needed</b> for Puerto Rico (SJU) or US Virgin Islands — they\'re US territories. You\'re responsible for all <b>travel documents, visas, and immigration requirements</b>. Some countries require proof of return/onward travel.', tags:'passport visa document id travel international requirement', cat:'Travel Docs' },
-    { q:'What\'s the GoWild travel period?', a:'The <b>2025-2026 Annual Pass</b> covers May 1, 2025 – April 30, 2026. The <b>2026-2027 Annual Pass</b> covers May 1, 2026 – April 30, 2027. Seasonal passes (Summer, Fall/Winter) cover shorter periods within these windows.', tags:'travel period when valid dates year annual season how long', cat:'Pass' },
-    { q:'When is the winter season for international flights?', a:'The <b>winter season</b> for ATL international routes runs approximately <b>November 1 through April 30</b>. This is when the most destinations are available. Some routes start later in <b>December</b> and end in <b>mid-April</b>. Here\'s the full breakdown:<br><br><b>Nov 1 – Apr 30:</b> Punta Cana (PUJ) daily, Montego Bay (MBJ) Mon/Tue/Wed/Thu, Guatemala City (GUA) ~2x/wk, Santo Domingo (SDQ) ~2x/wk, San Salvador (SAL) ~2x/wk, San Jose CR (SJO) Sat, San Pedro Sula (SAP) Sat.<br><b>Dec 1 – Apr 30:</b> Nassau (NAS) Sat, Turks & Caicos (PLS) Sat, Puerto Vallarta (PVR) Sat, Cabo (SJD) Sat, St. Maarten (SXM) 1-2x/wk.<br><b>Year-round:</b> San Juan (SJU) daily, Cancun (CUN) daily.', tags:'winter season when november march april international schedule routes dates cold start end', cat:'Seasonal' },
-    { q:'When is the summer season for international flights?', a:'<b>Summer</b> has fewer ATL international options. <b>Year-round routes</b> continue: San Juan (SJU) daily, Cancun (CUN) daily. The only summer-exclusive route is <b>Aruba (AUA)</b> — Saturdays only, approximately <b>May 1 through August 31</b>. Most Caribbean and Central America winter routes end by <b>April 30</b> and resume around <b>November 1</b>. From <b>DEN</b>, winter-only routes (approx Nov 1 – Apr 30) include Cancun, Honolulu, Cabo, Puerto Vallarta, Montego Bay, Punta Cana, Liberia, and San Juan.', tags:'summer season when may june july august international schedule routes warm start end', cat:'Seasonal' },
-    { q:'What days does Frontier fly to the Caribbean from ATL?', a:'Here\'s the ATL Caribbean schedule: <b>San Juan (SJU)</b> — daily year-round. <b>Punta Cana (PUJ)</b> — daily, Nov–Apr. <b>Montego Bay (MBJ)</b> — Mon/Tue/Wed/Thu, Nov–Apr. <b>Santo Domingo (SDQ)</b> — ~2x/wk, Nov–Apr. <b>Nassau (NAS)</b> — Sat only, Dec–Apr. <b>Turks & Caicos (PLS)</b> — Sat only, Dec–Apr. <b>St. Maarten (SXM)</b> — 1-2x/wk, Dec–Apr. <b>Aruba (AUA)</b> — Sat only, May–Aug (summer). Use <b>Flexible mode</b> in this tool to see exact dates and book on the right day.', tags:'caribbean days schedule when fly nassau jamaica punta cana aruba turks caicos san juan santo domingo montego bay', cat:'Seasonal' },
-    { q:'What days does Frontier fly to Mexico and Central America from ATL?', a:'Here\'s the ATL Mexico & Central America schedule: <b>Cancun (CUN)</b> — daily year-round. <b>Guatemala City (GUA)</b> — ~2x/wk, Nov–Apr (exact days vary). <b>San Salvador (SAL)</b> — ~2x/wk, Nov–Apr (exact days vary). <b>San Pedro Sula (SAP)</b> — Sat, Nov–Apr. <b>San Jose CR (SJO)</b> — Sat, Nov–Apr. <b>Cabo (SJD)</b> — Sat, Dec–Apr. <b>Puerto Vallarta (PVR)</b> — Sat, Dec–Apr. Use <b>Flexible mode</b> to try different dates for routes without fixed schedules.', tags:'mexico central america days schedule when fly cancun cabo puerto vallarta guatemala san salvador san jose costa rica', cat:'Seasonal' },
-    { q:'Tips for getting the best GoWild flights?', a:'<b>1.</b> Log in early — GoWild seats are limited and go fast. <b>2.</b> Check at midnight when domestic flights open. <b>3.</b> Use this tool\'s Flexible mode to find which days routes actually fly. <b>4.</b> International routes open 10 days ahead — set a reminder. <b>5.</b> Have backup destinations ready. <b>6.</b> Avoid peak blackout periods. <b>7.</b> Saturday-only routes (most int\'l) book up fast — be ready.', tags:'tips tricks best strategy hack advice how help', cat:'Tips' },
-    { q:'Can I check in online with GoWild?', a:'Yes! You can <b>check in online 24 hours before departure</b> on flyfrontier.com or the Frontier app. If you didn\'t buy a seat assignment, checking in early gives you the best chance at a decent seat. You can also check in at the airport kiosk or counter.', tags:'check in online app when time hours before boarding pass', cat:'Travel' },
-    { q:'Can I bring a personal item for free?', a:'Yes! Every Frontier fare (including GoWild) includes <b>one free personal item</b>. It must fit under the seat in front of you — max dimensions are <b>14" x 18" x 8"</b>. Think backpack, purse, or small laptop bag. Anything bigger counts as a carry-on and costs extra.', tags:'personal item free bag size dimensions backpack purse small', cat:'Bags' },
-    { q:'What if my flight gets cancelled or delayed?', a:'If Frontier cancels your flight, they\'ll typically <b>rebook you on the next available flight</b> at no extra cost. For significant delays (3+ hours), you may be eligible for a <b>refund or rebooking</b>. GoWild flights follow the same policies as regular tickets. Check Frontier\'s Customer Service for specific situations.', tags:'cancelled delayed delay weather rebook rebooking refund', cat:'Policies' },
-    { q:'Can I fly standby with GoWild?', a:'GoWild doesn\'t have a formal standby program. You need a <b>confirmed booking</b> to fly. However, if you miss a flight or want to try an earlier one, you\'d need to cancel your current booking and rebook (subject to availability and any fees).', tags:'standby fly earlier different flight same day wait list', cat:'Policies' },
-    { q:'What airports does Frontier fly from?', a:'Frontier has hubs/focus cities at <b>Denver (DEN)</b>, <b>Orlando (MCO)</b>, <b>Atlanta (ATL)</b>, <b>Las Vegas (LAS)</b>, <b>Philadelphia (PHL)</b>, and <b>Miami (MIA)</b> among others. They serve <b>100+ destinations</b> across the US, Mexico, Caribbean, and Central America. This tool has route data for ATL, DEN, and MCO.', tags:'airports hubs cities where fly from base hub focus', cat:'Routes' },
-    { q:'Is WiFi available on Frontier flights?', a:'Frontier offers <b>WiFi on most aircraft</b> for a fee. Pricing varies — typically <b>$5-10 for messaging</b> and <b>$10-20+ for full internet</b> per flight. WiFi quality can be inconsistent. It\'s not included with GoWild or basic fares — you pay separately on board or sometimes during booking.', tags:'wifi internet connection onboard plane wireless browse stream', cat:'In-Flight' },
-    { q:'Can I bring a carry-on bag?', a:'A carry-on bag (overhead bin size) is <b>not included</b> with GoWild fares. You\'d pay extra — typically <b>$40-60 online</b> or <b>$75+ at the gate</b>. Only a <b>personal item</b> (14x18x8 in, fits under seat) is free. Pro tip: buy carry-on online or in the app to save vs. gate pricing. If you have <b>Elite Status</b>, carry-on may be included.', tags:'carry on carryon overhead bin bag luggage included cost price', cat:'Bags' },
-    { q:'Can I travel with pets on GoWild?', a:'Yes, Frontier allows <b>small cats and dogs in the cabin</b> for a fee (typically <b>$99 each way</b>). The pet must fit in a carrier under the seat. The pet fee applies on GoWild flights just like regular fares. <b>No emotional support animals</b> — only trained service dogs fly free. Book the pet at the time of booking or call Frontier.', tags:'pet dog cat animal travel fly bring carrier', cat:'Policies' },
-    { q:'Can I add a companion or travel buddy?', a:'The GoWild pass is <b>non-transferable</b> — only the passholder can use it. However, companions can book <b>regular Frontier fares</b> on the same flight. There\'s no companion pass or family add-on. Each traveler who wants GoWild pricing needs their own pass.', tags:'companion buddy friend family travel together partner add guest', cat:'Pass' },
-    { q:'What happens during irregular operations (IRROPS)?', a:'If your flight is <b>cancelled by Frontier</b>, they\'ll rebook you on the next available flight. For <b>significant delays (3+ hours)</b>, you may request a refund. <b>Weather delays</b> don\'t guarantee compensation but you\'ll be rebooked. GoWild passengers are treated the same as regular ticketed passengers for disruptions. Keep the Frontier app handy for rebooking.', tags:'irregular operations irrops weather delay cancel divert mechanical rebook compensation', cat:'Policies' },
-    { q:'What is the Frontier Miles program?', a:'<b>FRONTIER Miles</b> is Frontier\'s free loyalty program — you must be a member to use GoWild. You earn <b>10 miles and 10 Elite Status Points per $1 spent</b> with Frontier. Miles can be redeemed for future flights. The $0.01 GoWild fare doesn\'t earn meaningful miles, but <b>bag fees, seat purchases, and upgrades do count</b>. Four elite tiers: Silver (10K), Gold (20K), Platinum (50K), Diamond (100K). Platinum is the sweet spot — free bags, companion travel, and First Class upgrades.', tags:'frontier miles loyalty program elite status silver gold diamond rewards member points earn', cat:'Miles & Status' },
-    { q:'When do flights open at midnight?', a:'Domestic GoWild flights open <b>1 day before departure</b>. This means tomorrow\'s flights typically become available around <b>midnight Eastern time</b> (or shortly after). International flights open <b>10 days before</b>. Pro tip: set an alarm and check right at midnight for popular routes — GoWild seats go fast, especially on weekends and to popular destinations.', tags:'midnight open available when time book clock early morning release', cat:'Booking' },
-    { q:'What international flights are available from DEN?', a:'From <b>Denver (DEN)</b>, Frontier\'s international routes are mostly <b>winter season (Nov–Apr)</b>: <b>Cancun (CUN)</b> — 3x/wk, <b>Honolulu (HNL)</b> — 2x/wk (Nov–Mar), <b>Cabo (SJD)</b> — 2x/wk, <b>Puerto Vallarta (PVR)</b> — 2x/wk, <b>San Juan (SJU)</b> — 2x/wk, <b>Montego Bay (MBJ)</b> — 1x/wk, <b>Punta Cana (PUJ)</b> — 1x/wk, <b>Liberia CR (LIR)</b> — 1x/wk. Note: DEN is the only hub with a Honolulu route!', tags:'denver den international flights destinations routes hawaii honolulu', cat:'Routes' },
-    { q:'What international flights are available from MCO?', a:'From <b>Orlando (MCO)</b>, Frontier has the most year-round international options: <b>San Juan (SJU)</b> — daily most of the year, <b>Cancun (CUN)</b> — daily (Nov–Jun). Winter routes (Nov–Apr): <b>Montego Bay (MBJ)</b> — 3x/wk, <b>Punta Cana (PUJ)</b> — 3x/wk, <b>Nassau (NAS)</b> — 2x/wk, <b>San Jose CR (SJO)</b> — 2x/wk, <b>Liberia CR (LIR)</b> — 2x/wk, <b>St. Thomas (STT)</b> — 2x/wk, <b>Guatemala City (GUA)</b> — 1x/wk, <b>Cabo (SJD)</b> — 1x/wk, <b>Puerto Plata (POP)</b> — 1x/wk, <b>St. Croix (STX)</b> — 1x/wk.', tags:'orlando mco international flights destinations routes florida', cat:'Routes' },
-    // ===== FLEET & AIRCRAFT =====
-    { q:'What planes does Frontier fly?', a:'Frontier operates an <b>all-Airbus fleet</b> of 160+ jets. The fleet includes <b>A320ceo, A320neo, A321ceo, and A321neo</b> models. They have the largest and youngest A320neo family fleet in the US. Frontier retired their last A319 in September 2021. All aircraft are leased — Frontier doesn\'t own any planes outright.', tags:'plane aircraft fleet airbus a320 a321 neo what type jet', cat:'Fleet' },
-    { q:'What is the seat layout on Frontier planes?', a:'<b>A320 aircraft:</b> 186 seats, 3x3 layout, 28-30 inch seat pitch. <b>A321 aircraft:</b> 230+ seats, 3x3 layout, 30-32 inch seat pitch. Middle seats are slightly wider at <b>19 inches</b> vs window/aisle. Stretch seats (exit rows and first few rows) add <b>5-7 extra inches</b> of legroom and can recline. New <b>First Class</b> seats (2x2 layout, first 2 rows) are rolling out in early 2026.', tags:'seat layout pitch legroom width configuration rows how many seats plane', cat:'Fleet' },
-    { q:'Does Frontier have First Class?', a:'<b>Yes — rolling out in early 2026!</b> Frontier is installing First Class seats in a <b>2x2 layout in the first 2 rows</b> on A320 and A321 aircraft. Seats are made by Italian manufacturer Geven. They\'re pre-reclined (not lie-flat) — more like premium economy. Expected pricing: <b>up to $99 per flight</b>. <b>Elite Platinum and Diamond</b> members may get complimentary upgrades. Full rollout expected by spring 2026.', tags:'first class premium upgrade luxury front row seat new 2026', cat:'Fleet' },
-    { q:'What are Stretch seats on Frontier?', a:'<b>Stretch seats</b> have <b>5-7 extra inches</b> of legroom compared to standard seats. They also <b>recline</b> (standard seats don\'t) and have bigger tray tables. Usually 5-6 rows per aircraft, including exit rows. Cost: <b>$16-56+ per flight</b> depending on route and when you buy. <b>Elite 20K</b> members can pick stretch seats free at check-in. <b>Elite 50K+</b> can select at booking.', tags:'stretch seat extra legroom recline exit row upgrade comfort space', cat:'Seats' },
-    { q:'What is UpFront Plus seating?', a:'<b>UpFront Plus</b> gives you a window or aisle seat in the front rows with a <b>guaranteed empty middle seat</b> next to you, plus extra legroom. You get <b>priority boarding</b> and faster deplaning. It\'s Frontier\'s premium economy-style option available now, before First Class rolls out. Great for travelers who want more space without paying for a full upgrade.', tags:'upfront plus seat premium front row empty middle priority boarding space', cat:'Seats' },
-    // ===== DETAILED BAG POLICIES =====
-    { q:'What are the exact bag size and weight limits?', a:'<b>Personal item (free):</b> 14"H x 18"W x 8"D, no weight limit. <b>Carry-on:</b> 24"H x 16"W x 10"D, max <b>35 lbs</b>. <b>Checked bag:</b> 62 linear inches total (L+W+D), max <b>40 lbs</b>. <b>Overweight fees:</b> 41-50 lbs = $75 extra, 51-100 lbs = $100 extra. Bags over 100 lbs are not allowed. <b>Oversized:</b> 63-110 inches = $75 extra. Over 110 inches = not accepted.', tags:'bag size weight limit dimensions inches pounds overweight oversized maximum', cat:'Bags' },
-    { q:'Do military members get free bags?', a:'<b>Yes!</b> Active-duty US military personnel get: <b>1 free personal item, 1 free carry-on, and 2 free checked bags</b> with an increased weight allowance of <b>70 lbs each</b>. Standard overweight and oversized fees are waived. You\'ll need to show your military ID at the airport. This applies to GoWild flights too.', tags:'military free bags active duty veteran service member armed forces', cat:'Bags' },
-    { q:'Are strollers and car seats free to check?', a:'<b>Yes!</b> Strollers, car seats, wheelchairs, and medical devices can be checked or carried <b>at no charge</b> and don\'t count toward your baggage allowance. You can gate-check a stroller and pick it up at the jet bridge on arrival. This is the same policy for GoWild and regular fares.', tags:'stroller car seat wheelchair medical device baby child free check gate', cat:'Bags' },
-    // ===== BOARDING =====
-    { q:'How does Frontier boarding work?', a:'Frontier uses <b>7 boarding groups</b> (updated Oct 2025):<br><b>Pre-board:</b> Disabilities, military, Diamond members, families with kids under 2.<br><b>Group 1:</b> Platinum, Gold, Business Bundle, Board First purchasers.<br><b>Groups 2-3:</b> Economy Bundle, carry-on bag holders.<br><b>Group 4:</b> Silver, Frontier Mastercard, priority boarding, premium/exit rows.<br><b>Group 5:</b> Other Frontier Miles members.<br><b>Groups 6-7:</b> Basic fare passengers.<br><b>Important:</b> Boarding starts 30 min before departure, doors close <b>15 min before</b> (earlier than most airlines!).', tags:'boarding group zone order process when line gate door close priority', cat:'Boarding' },
-    { q:'When does the gate close on Frontier?', a:'Frontier closes boarding doors <b>15 minutes before departure</b> — that\'s earlier than most airlines (which close at 10 min). If you arrive at the gate with only 10 minutes to spare, <b>you could be denied boarding</b>. Always aim to be at your gate <b>30+ minutes before departure</b>. Boarding typically starts 30 minutes before the flight.', tags:'gate close door time late minutes before departure denied boarding cutoff', cat:'Boarding' },
-    // ===== ELITE STATUS =====
-    { q:'What are the Frontier Elite Status tiers?', a:'Frontier has <b>4 elite tiers</b> based on Elite Status Points (10 pts per $1 spent):<br><b>Silver (10K pts / ~$1,000):</b> No change fees, standard seat at booking, 20% mile multiplier.<br><b>Gold (20K pts / ~$2,000):</b> + stretch seat at check-in, Group 1 boarding, UpFront Plus upgrade 4hrs before, 40% multiplier.<br><b>Platinum (50K pts / ~$5,000):</b> + free carry-on & checked bags, unlimited companion travel, First Class upgrades, Silver Pass to gift, 60% multiplier.<br><b>Diamond (100K pts / ~$10,000):</b> + premium seats for entire reservation, all Platinum perks extended to companions.', tags:'elite status tier silver gold platinum diamond level benefits perks requirement points', cat:'Miles & Status' },
-    { q:'Can I get Frontier elite status for cheap?', a:'<b>Yes!</b> Frontier offers status match deals. They\'ve offered <b>Elite Gold for $69</b> if you have status with Southwest, JetBlue, Spirit, or Alaska — valid through 2026. They also run <b>Platinum Status Challenges</b>: pay $99, earn just 12,500 points in 90 days (vs. normal 50K) to get Platinum through 2026. Check Frontier\'s promotions page for current offers.', tags:'status match challenge cheap easy shortcut promotion deal offer buy purchase', cat:'Miles & Status' },
-    { q:'What is the unlimited companion benefit?', a:'<b>Elite Platinum</b> and <b>Diamond</b> members get <b>Unlimited Companion Travel</b> — you can bring one companion on any Frontier flight at a discounted companion fare. Platinum members also get a <b>free Silver Status Pass</b> to gift to another person annually. These perks apply when flying on GoWild fares too, making Platinum status extremely valuable for couples.', tags:'companion unlimited travel friend partner couple benefit platinum diamond', cat:'Miles & Status' },
-    // ===== CUSTOMER SERVICE =====
-    { q:'How do I contact Frontier customer service?', a:'<b>Phone:</b> 801-401-9000 (agents available 24/7, but they\'ll push you toward chat). <b>Live chat:</b> flyfrontier.com/chat-with-us — available 24/7, usually fastest option. <b>WhatsApp/Text:</b> (720) 902-3969. <b>App:</b> Manage bookings, check in, get boarding passes. <b>Tip:</b> Chat is almost always faster than calling. For complaints or compliments, use the online form at flyfrontier.com/customer-service.', tags:'contact customer service phone number call chat text whatsapp help support complaint', cat:'Customer Service' },
-    // ===== GOWILD SPECIFICS =====
-    { q:'How much does the GoWild pass actually cost?', a:'<b>2026-2027 Annual Pass:</b> $599 regular price, sometimes on sale for <b>$349</b> (intro) or even <b>$299</b> (flash sales). <b>Fall & Winter Pass:</b> ~$299 (Sep–Feb). <b>Monthly Pass:</b> $99 enrollment + monthly fee. <b>Renewal prices:</b> $599-699 depending on your pass year. The enrollment fee is <b>non-refundable</b>. The pass auto-renews unless you opt out. Pro tip: Watch for flash sales — Frontier has offered passes as low as $299 during holiday promotions.', tags:'cost price how much pass annual monthly renewal sale discount cheap deal', cat:'Pricing' },
-    { q:'What is GoWild Early Booking?', a:'<b>Early Booking</b> lets you book GoWild flights <b>outside the normal booking windows</b> (normally 1 day for domestic, 10 days for intl). A small additional <b>Early Booking fee</b> applies on top of the $0.01 fare — the exact fee varies. Early booking is currently valid for <b>domestic US and Puerto Rico travel only</b>. This is great for planning trips in advance rather than scrambling at the last minute.', tags:'early booking advance ahead plan fee charge extra cost window before schedule', cat:'Booking' },
-    { q:'What exactly are the 2026 blackout dates?', a:'<b>2026 GoWild blackout dates:</b><br><b>Jan:</b> 1, 3-4, 15-16, 19 (New Year\'s, MLK)<br><b>Feb:</b> 12-13, 16 (Presidents\' Day)<br><b>Mar:</b> 13-15, 20-22, 27-29 (Spring Break)<br><b>Apr:</b> 3-6, 10-12 (Easter/Spring Break)<br><b>May:</b> 21-22, 25 (Memorial Day)<br><b>Jun:</b> 25-28<br><b>Jul:</b> 2-6 (July 4th)<br><b>Sep:</b> 3-4, 7 (Labor Day)<br><b>Oct:</b> 8-9, 11-12 (Columbus Day)<br><b>Nov:</b> 24-25, 28-30 (Thanksgiving)<br><b>Dec:</b> 19-31 (Holiday season)<br>Total: about <b>60+ blackout days</b> in 2026. Check the calendar above — blackout dates are highlighted in red!', tags:'blackout dates 2026 list when holiday blocked specific exact all', cat:'Blackouts' },
-    { q:'What are the 2027 blackout dates?', a:'<b>2027 GoWild blackout dates (through April):</b><br><b>Jan:</b> 1-3, 14-15, 18 (New Year\'s, MLK)<br><b>Feb:</b> 11-12, 15 (Presidents\' Day)<br><b>Mar:</b> 12-14, 20-21, 26-29 (Spring Break)<br><b>Apr:</b> 2-4 (Easter)<br>Dates for May 2027 and beyond will be posted before Frontier accepts enrollments for that period.', tags:'blackout dates 2027 list when holiday blocked next year', cat:'Blackouts' },
-    { q:'What is the GoWild refund policy?', a:'The <b>enrollment fee is non-refundable</b>. For individual flights: you can get a <b>full refund within 24 hours of booking</b> if the flight is 7+ days out. After 24 hours, cancellation fees apply and fares are non-refundable. <b>Always cancel before departure time</b> — not cancelling counts as a no-show, which can lead to penalties or pass revocation. The pass auto-renews, so cancel before your renewal date to avoid charges.', tags:'refund policy money back cancel enrollment return fee non refundable 24 hours', cat:'Policies' },
-    // ===== PRACTICAL TIPS =====
-    { q:'What should I pack for a GoWild trip?', a:'Since GoWild only includes a <b>free personal item</b> (14x18x8 in), packing light is key. Tips: use a <b>compressible backpack or small duffel</b>. Wear your heaviest clothes on the plane. Roll clothes instead of folding. Use packing cubes. For longer trips, consider paying for a checked bag online (cheaper than at the gate). A good personal item bag: <b>Patagonia Black Hole Mini MLC</b> or <b>Osprey Daylite</b>.', tags:'pack packing light bag personal item tip trick small backpack travel', cat:'Tips' },
-    { q:'Can I use GoWild to fly to Hawaii?', a:'<b>Only from Denver (DEN)!</b> Frontier flies DEN to <b>Honolulu (HNL)</b> approximately <b>2x/week during winter season</b> (Nov–Mar). This is the only Hawaii route on Frontier. It\'s one of the most popular GoWild routes, so seats go fast. Book as soon as the 10-day international window opens. No Hawaii flights from ATL or MCO.', tags:'hawaii honolulu hnl fly pacific island tropical den denver', cat:'Routes' },
-    { q:'How do I avoid no-show penalties?', a:'<b>Always cancel before departure time</b> if you can\'t make your flight. Use the Frontier app or website — it takes 30 seconds. Repeated no-shows can result in <b>financial penalties or pass revocation without refund</b>. Frontier tracks no-shows because empty GoWild seats could have gone to other travelers. Set a phone reminder to cancel if your plans change.', tags:'no show penalty avoid cancel before departure time revoke pass', cat:'Policies' },
-    { q:'What is the best day to fly GoWild?', a:'<b>Tuesdays and Wednesdays</b> are typically the least busy days with the most GoWild seat availability. <b>Saturdays</b> are important for international routes (many only fly Sat). Avoid <b>Fridays and Sundays</b> — these are peak travel days with fewer GoWild seats. For domestic, <b>midweek red-eyes or early morning</b> flights often have the most availability. Check this tool\'s calendar to avoid blackout dates!', tags:'best day week fly when tuesday wednesday saturday availability seat', cat:'Tips' },
-    { q:'How do I check flight status on Frontier?', a:'Check flight status at <b>flyfrontier.com/travel/my-trips/flight-status</b> or in the <b>Frontier app</b>. You can search by flight number, route, or confirmation code. The app sends <b>push notifications</b> for delays, gate changes, and cancellations. Third-party apps like <b>FlightAware</b> and <b>Flightradar24</b> also track Frontier flights in real-time.', tags:'flight status check track delay gate change cancel notification app real time', cat:'Travel' },
-    // ===== DISCOUNT DEN & FARE LOGIC =====
-    { q:'What is Discount Den and do I need it with GoWild?', a:'<b>Discount Den</b> is Frontier\'s separate membership ($59.99/year) that gives discounts on regular fares. <b>You do NOT need Discount Den if you have GoWild</b> — GoWild already gives you the $0.01 fare, which is better than any Discount Den discount. However, if your GoWild pass expires or you fly during a blackout date, Discount Den fares would apply to regular bookings. They\'re separate programs that don\'t stack.', tags:'discount den membership need gowild stack combine both difference fare', cat:'Pricing' },
-    { q:'Why do GoWild taxes vary by destination?', a:'The $0.01 airfare is the same everywhere, but <b>taxes and fees vary by airport and country</b>. <b>Domestic flights:</b> ~$7-15 total (US taxes + segment fees). <b>Caribbean:</b> $30-60 (departure taxes vary by island). <b>Mexico:</b> $40-70 (tourism tax + departure fee). <b>Central America:</b> $40-80+. The biggest variable is the destination country\'s departure tax, which Frontier has no control over.', tags:'taxes fees cost vary different price why more expensive international domestic cheap', cat:'Pricing' },
-    { q:'When are flights cheapest with GoWild?', a:'GoWild fares are always $0.01, but <b>availability varies</b>. Best odds for seats: <b>Tuesday and Wednesday</b> flights (lowest demand). <b>Red-eye and early morning</b> departures. <b>Midweek travel</b> in general. Worst odds: <b>Friday and Sunday</b> (peak leisure travel), holiday weekends, and popular international routes on Saturdays. GoWild seats are limited per flight, so low-demand flights = better chance of snagging one.', tags:'cheapest best time day week availability demand seats when easy', cat:'Tips' },
-    { q:'Why did the price jump when I searched again?', a:'If you\'re seeing prices above $0.01, you\'re probably seeing <b>regular fares, not GoWild fares</b>. Common reasons: <b>1)</b> You\'re not logged into your FRONTIER Miles account. <b>2)</b> The flight is outside your GoWild booking window (1 day domestic, 10 days intl). <b>3)</b> It\'s a blackout date. <b>4)</b> GoWild seats on that specific flight are sold out. <b>5)</b> Your pass has expired. Always check that you see the $0.01 option at the top of the fare column.', tags:'price jump expensive why not penny cent showing regular fare cost', cat:'Troubleshooting' },
-    { q:'What are Frontier fare types?', a:'Frontier has several fare buckets (from cheapest to most): <b>GoWild ($0.01)</b> — pass holders only, limited seats. <b>Basic</b> — cheapest regular fare, personal item only, no changes. <b>Economy</b> — personal item + carry-on, standard seat. <b>Premium</b> — adds stretch seat + priority boarding. <b>Business</b> — best flex, free bags, best seats. GoWild is always the top option when available. If you see "Economy" as the cheapest, GoWild seats are gone for that flight.', tags:'fare type bucket basic economy premium business class tier price level option', cat:'Pricing' },
-    { q:'Does GoWild work with points or miles redemption?', a:'<b>No</b> — GoWild and miles redemption are separate. You can\'t use FRONTIER Miles points to book GoWild flights; the $0.01 fare is charged to your credit card. However, you <b>do earn miles</b> on add-on purchases (bags, seats) during GoWild flights. You can use your miles for regular fare flights when GoWild isn\'t available (like during blackout dates).', tags:'points miles redemption use spend redeem combine gowild together', cat:'Miles & Status' },
-];
-
-const HELP_SUGGESTIONS = ['booking window','bag sizes & fees','2026 blackout dates','winter season','caribbean schedule','elite status','first class','boarding groups','stretch seats','GoWild cost','contact support','tips & tricks'];
-
-function searchHelp(query) {
-    if (!query || query.length < 2) return [];
-    const qLower = query.toLowerCase();
-    // Filter out common filler words so we match on meaningful terms
-    const stopWords = new Set(['how','much','is','a','the','do','does','i','can','my','what','are','with','on','for','to','of','in','it','and','or','be','get']);
-    const words = qLower.split(/\s+/).filter(w => w.length > 1);
-    const keyWords = words.filter(w => !stopWords.has(w));
-    const searchWords = keyWords.length > 0 ? keyWords : words; // fall back to all words if everything was a stop word
-    return HELP_KB.map(entry => {
-        const tags = entry.tags.toLowerCase();
-        const q = entry.q.toLowerCase();
-        const a = entry.a.toLowerCase();
-        let score = 0;
-        // Keyword matches (weighted by location)
-        searchWords.forEach(w => {
-            if (tags.includes(w)) score += 3;    // tags are the strongest signal
-            if (q.includes(w)) score += 2;       // question match
-            if (a.includes(w)) score += 0.5;     // answer match (weakest)
-        });
-        // Bonus: full query phrase match
-        if (tags.includes(qLower)) score += 5;
-        if (q.includes(qLower)) score += 4;
-        return { ...entry, score };
-    }).filter(e => e.score > 0).sort((a, b) => b.score - a.score);
-}
-
-function submitHelp() {
-    const query = helpInput.value.trim();
-    const answerEl = document.getElementById('helpAnswer');
-    if (!query || query.length < 2) { answerEl.classList.remove('show'); return; }
-
-    const results = searchHelp(query);
-    if (results.length === 0) {
-        answerEl.innerHTML = '<div class="ha-none">Hmm, I don\'t have an answer for that. Try "bags", "cancel", "booking", or "blackout dates".</div>';
-        answerEl.classList.add('show');
-        trackEvent('help_search', { query: query, result: 'no_match' });
-        return;
-    }
-
-    const best = results[0];
-    trackEvent('help_search', { query: query, result: best.q, category: best.cat || 'unknown' });
-    const related = results.slice(1, 4);
-
-    let html = `<div class="ha-box">`;
-    html += `<div class="ha-q">${best.q}</div>`;
-    html += `<div class="ha-a">${best.a}</div>`;
-    if (related.length > 0) {
-        html += `<div class="ha-related"><div class="ha-related-title">Related</div><div class="ha-related-links">`;
-        related.forEach(r => {
-            html += `<span class="ha-link" onclick="askHelp('${r.q.replace(/'/g,'\\\'')}')">${r.q}</span>`;
-        });
-        html += `</div></div>`;
-    }
-    html += `</div>`;
-    answerEl.innerHTML = html;
-    answerEl.classList.add('show');
-}
-
-function askHelp(question) {
-    helpInput.value = question;
-    submitHelp();
-    document.getElementById('helpAnswer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-// Wire up help search
-const helpInput = document.getElementById('helpInput');
-helpInput.addEventListener('keydown', e => {
-    if (e.key === 'Enter') { e.preventDefault(); e.stopPropagation(); submitHelp(); }
-});
-helpInput.addEventListener('input', () => {
-    document.getElementById('helpSend').classList.toggle('active', helpInput.value.trim().length > 0);
-});
-
-// Render suggestion chips
-document.getElementById('helpSugs').innerHTML = HELP_SUGGESTIONS.map(s =>
-    `<span class="help-sug" onclick="helpInput.value='${s}';submitHelp()">${s}</span>`
-).join('');
 </script>
 </body>
 </html>
