@@ -239,6 +239,27 @@
             .cals{grid-template-columns:1fr}
         }
 
+        /* ===== RULES PANEL ===== */
+        .rules-toggle{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:var(--green-light);border:1px solid var(--green-mid);border-radius:var(--radius);cursor:pointer;margin:0 auto;max-width:1500px;font-size:13px;font-weight:600;color:var(--green);transition:all .15s}
+        .rules-toggle:hover{background:#d4edda;border-color:var(--green)}
+        .rules-toggle .arrow{transition:transform .2s;font-size:16px}
+        .rules-toggle.open .arrow{transform:rotate(180deg)}
+        .rules-panel{max-width:1500px;margin:0 auto;overflow:hidden;max-height:0;transition:max-height .3s ease;border-left:1px solid var(--green-mid);border-right:1px solid var(--green-mid)}
+        .rules-panel.open{max-height:600px;border-bottom:1px solid var(--green-mid);border-radius:0 0 var(--radius) var(--radius)}
+        .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;padding:16px 20px;background:#fff}
+        .rule-card{padding:10px 12px;border-radius:6px;background:var(--bg);border:1px solid var(--border)}
+        .rule-card .rule-icon{font-size:18px;margin-bottom:4px}
+        .rule-card .rule-title{font-size:12px;font-weight:700;color:var(--text);margin-bottom:3px}
+        .rule-card .rule-text{font-size:11px;color:var(--muted);line-height:1.5}
+        .rule-card .rule-text b{color:var(--text)}
+        @media(max-width:768px){
+            .rules-grid{grid-template-columns:1fr 1fr}
+            .rules-toggle,.rules-panel{margin:0 14px}
+        }
+        @media(max-width:480px){
+            .rules-grid{grid-template-columns:1fr}
+        }
+
         ::-webkit-scrollbar{width:6px}
         ::-webkit-scrollbar-track{background:transparent}
         ::-webkit-scrollbar-thumb{background:#d1d5db;border-radius:3px}
@@ -259,6 +280,55 @@
         <span><b>Domestic:</b> book 1 day before</span>
         <span><b>Int'l:</b> book 10 days before</span>
         <span><b>Tip:</b> Log into Frontier first to see $0.01 fares</span>
+    </div>
+</div>
+
+<div class="rules-toggle" id="rulesToggle" onclick="this.classList.toggle('open');document.getElementById('rulesPanel').classList.toggle('open')">
+    <span>&#9889; GoWild in 30 Seconds — The Rules of the Road</span>
+    <span class="arrow">&#9660;</span>
+</div>
+<div class="rules-panel" id="rulesPanel">
+    <div class="rules-grid">
+        <div class="rule-card">
+            <div class="rule-icon">&#128176;</div>
+            <div class="rule-title">What You Pay</div>
+            <div class="rule-text"><b>$0.01 airfare</b> + taxes/fees per flight. Domestic total: <b>~$7-15</b>. International total: <b>~$30-80+</b>. That's it — no hidden fare buckets.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#128197;</div>
+            <div class="rule-title">Booking Windows</div>
+            <div class="rule-text"><b>Domestic:</b> opens 1 day before departure. <b>International:</b> opens 10 days before. Early Booking available for a small extra fee.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#128274;</div>
+            <div class="rule-title">Must Be Logged In</div>
+            <div class="rule-text">GoWild fares only appear when you're <b>logged into your FRONTIER Miles account</b> on flyfrontier.com. No login = no $0.01 fares.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#127890;</div>
+            <div class="rule-title">Bags Aren't Free</div>
+            <div class="rule-text">Only a <b>personal item</b> (14x18x8") is included. Carry-on: <b>~$40-60</b>. Checked bag: <b>~$35-55</b>. Always buy bags online — gate prices are brutal.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#128186;</div>
+            <div class="rule-title">Seats: Luck of the Draw</div>
+            <div class="rule-text">No free seat selection. You're <b>assigned at check-in</b>. Pay $6-15 for standard or $15-50+ for Stretch. Elite Status gets free picks.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#128683;</div>
+            <div class="rule-title">Blackout Dates</div>
+            <div class="rule-text"><b>~60 days/year</b> are blacked out around holidays and peak travel. Check the calendar on this page — red dates = no GoWild.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#9888;&#65039;</div>
+            <div class="rule-title">Never No-Show</div>
+            <div class="rule-text"><b>Always cancel before departure</b> if plans change. Repeated no-shows = penalties or <b>pass revocation without refund</b>. It takes 30 seconds in the app.</div>
+        </div>
+        <div class="rule-card">
+            <div class="rule-icon">&#128161;</div>
+            <div class="rule-title">Pro Tips</div>
+            <div class="rule-text">Check at <b>midnight</b> when domestic opens. <b>Tue/Wed</b> have best availability. <b>Saturday</b> is key for most int'l routes. Have backup destinations ready.</div>
+        </div>
     </div>
 </div>
 
@@ -1209,6 +1279,13 @@ const HELP_KB = [
     { q:'How do I avoid no-show penalties?', a:'<b>Always cancel before departure time</b> if you can\'t make your flight. Use the Frontier app or website — it takes 30 seconds. Repeated no-shows can result in <b>financial penalties or pass revocation without refund</b>. Frontier tracks no-shows because empty GoWild seats could have gone to other travelers. Set a phone reminder to cancel if your plans change.', tags:'no show penalty avoid cancel before departure time revoke pass', cat:'Policies' },
     { q:'What is the best day to fly GoWild?', a:'<b>Tuesdays and Wednesdays</b> are typically the least busy days with the most GoWild seat availability. <b>Saturdays</b> are important for international routes (many only fly Sat). Avoid <b>Fridays and Sundays</b> — these are peak travel days with fewer GoWild seats. For domestic, <b>midweek red-eyes or early morning</b> flights often have the most availability. Check this tool\'s calendar to avoid blackout dates!', tags:'best day week fly when tuesday wednesday saturday availability seat', cat:'Tips' },
     { q:'How do I check flight status on Frontier?', a:'Check flight status at <b>flyfrontier.com/travel/my-trips/flight-status</b> or in the <b>Frontier app</b>. You can search by flight number, route, or confirmation code. The app sends <b>push notifications</b> for delays, gate changes, and cancellations. Third-party apps like <b>FlightAware</b> and <b>Flightradar24</b> also track Frontier flights in real-time.', tags:'flight status check track delay gate change cancel notification app real time', cat:'Travel' },
+    // ===== DISCOUNT DEN & FARE LOGIC =====
+    { q:'What is Discount Den and do I need it with GoWild?', a:'<b>Discount Den</b> is Frontier\'s separate membership ($59.99/year) that gives discounts on regular fares. <b>You do NOT need Discount Den if you have GoWild</b> — GoWild already gives you the $0.01 fare, which is better than any Discount Den discount. However, if your GoWild pass expires or you fly during a blackout date, Discount Den fares would apply to regular bookings. They\'re separate programs that don\'t stack.', tags:'discount den membership need gowild stack combine both difference fare', cat:'Pricing' },
+    { q:'Why do GoWild taxes vary by destination?', a:'The $0.01 airfare is the same everywhere, but <b>taxes and fees vary by airport and country</b>. <b>Domestic flights:</b> ~$7-15 total (US taxes + segment fees). <b>Caribbean:</b> $30-60 (departure taxes vary by island). <b>Mexico:</b> $40-70 (tourism tax + departure fee). <b>Central America:</b> $40-80+. The biggest variable is the destination country\'s departure tax, which Frontier has no control over.', tags:'taxes fees cost vary different price why more expensive international domestic cheap', cat:'Pricing' },
+    { q:'When are flights cheapest with GoWild?', a:'GoWild fares are always $0.01, but <b>availability varies</b>. Best odds for seats: <b>Tuesday and Wednesday</b> flights (lowest demand). <b>Red-eye and early morning</b> departures. <b>Midweek travel</b> in general. Worst odds: <b>Friday and Sunday</b> (peak leisure travel), holiday weekends, and popular international routes on Saturdays. GoWild seats are limited per flight, so low-demand flights = better chance of snagging one.', tags:'cheapest best time day week availability demand seats when easy', cat:'Tips' },
+    { q:'Why did the price jump when I searched again?', a:'If you\'re seeing prices above $0.01, you\'re probably seeing <b>regular fares, not GoWild fares</b>. Common reasons: <b>1)</b> You\'re not logged into your FRONTIER Miles account. <b>2)</b> The flight is outside your GoWild booking window (1 day domestic, 10 days intl). <b>3)</b> It\'s a blackout date. <b>4)</b> GoWild seats on that specific flight are sold out. <b>5)</b> Your pass has expired. Always check that you see the $0.01 option at the top of the fare column.', tags:'price jump expensive why not penny cent showing regular fare cost', cat:'Troubleshooting' },
+    { q:'What are Frontier fare types?', a:'Frontier has several fare buckets (from cheapest to most): <b>GoWild ($0.01)</b> — pass holders only, limited seats. <b>Basic</b> — cheapest regular fare, personal item only, no changes. <b>Economy</b> — personal item + carry-on, standard seat. <b>Premium</b> — adds stretch seat + priority boarding. <b>Business</b> — best flex, free bags, best seats. GoWild is always the top option when available. If you see "Economy" as the cheapest, GoWild seats are gone for that flight.', tags:'fare type bucket basic economy premium business class tier price level option', cat:'Pricing' },
+    { q:'Does GoWild work with points or miles redemption?', a:'<b>No</b> — GoWild and miles redemption are separate. You can\'t use FRONTIER Miles points to book GoWild flights; the $0.01 fare is charged to your credit card. However, you <b>do earn miles</b> on add-on purchases (bags, seats) during GoWild flights. You can use your miles for regular fare flights when GoWild isn\'t available (like during blackout dates).', tags:'points miles redemption use spend redeem combine gowild together', cat:'Miles & Status' },
 ];
 
 const HELP_SUGGESTIONS = ['booking window','bag sizes & fees','2026 blackout dates','winter season','caribbean schedule','elite status','first class','boarding groups','stretch seats','GoWild cost','contact support','tips & tricks'];
